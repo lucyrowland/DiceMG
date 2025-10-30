@@ -9,79 +9,51 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace DiceMG
 {
-    public class Dice
+    public enum DieState
     {
-        public Point _position { get; set; }
-        public int width { get; } = Convert.ToInt32(spriteSize*0.9);
-        public int _sides { get; init; }
-        private int _side_up { get; set; }
-        private List<int> _range;
-        public Rectangle gameObj { get; set; } = Rectangle.Empty;
-        public DieState _state { get; set; } = DieState.free;
-        private static int spriteSize = 68;
-        public Rectangle Sprite;
+        free,
+        held,
+        played,
+        rolling,
+    }
 
-        public Vector2 PositionF;
-        public Vector2 Velocity;
-        public Vector2 Target;
-        private float springK = 12f;
-        private float damping = 8f;
-        private float stopThreshold = 1f;
-        public bool isMoving = false;
-        private float deceleration = 600f; // Increased for more realistic skidding
-        private float friction = 0.8f; // Additional friction factor
-        public bool EnteredTray = true;
+    public class Dice : GameObject
+    {
 
-        public Dice(int sides, Point position)
+        public int _sides = 6;
+        public int[] _range = [1, 2, 3, 4, 5, 6];
+        public DieState State = DieState.free; 
+        private int _side_up;
+        public int Value { get { return _side_up; } }
+        
+        // Constructor - use 'base' to call parent constructor
+        public Dice(Vector2 position) 
+            : base(50, 50, position, ObjType.Dice)
         {
-            _position = position;
-            PositionF = new Vector2(position.X, position.Y);
-            _sides = sides;
-            _state = DieState.free;
-            _range = Enumerable.Range(1, _sides).ToList();
+            // Any Dice-specific initialization goes here
+        }
+        
+        
+        public Dice(float width, float height, Vector2 position) 
+            : base(width, height, position, ObjType.Dice)
+        {
+            // Any Dice-specific initialization goes here
         }
 
-        public Rectangle spriteCoord()
-        {
-            Sprite = _side_up switch
-            {
-                1 => new Rectangle(0, 136, spriteSize, spriteSize),
-                4 => new Rectangle(68, 136, spriteSize, spriteSize),
-                5 => new Rectangle(0, 68, spriteSize, spriteSize),
-                2 => new Rectangle(68, 68, spriteSize, spriteSize),
-                6 => new Rectangle(0, 0, spriteSize, spriteSize),
-                _ => new Rectangle(68, 0, spriteSize, spriteSize)
-            };
-            return Sprite;
-        }
-
-        public enum DieState
-        {
-            free,
-            held,
-            played
-        }
-
-        public void Roll(Vector2 start, Vector2 target)
+        public void Roll()
         {
             _side_up = Global.SoRandom.Next(1, _sides + 1);
-            startMove(start, target);
+            State = DieState.rolling; 
+            // Give it some random initial velocity
+            Velocity = new Vector2(
+                (float)(Global.SoRandom.NextDouble() - 0.5) * 500, // random X velocity
+                (float)(Global.SoRandom.NextDouble() - 0.5) * 500  // random Y velocity
+            );
         }
 
-        public Point Size()
-        {
-            return new Point(width); //dice is a square so width is the same as height 
-        }
 
-        public Point Location()
-        {
-            return _position;
-        }
 
-        public int Value
-        {
-            get { return _side_up; }
-        }
+
 
         public void startMove(Vector2 start, Vector2 target)
         {
