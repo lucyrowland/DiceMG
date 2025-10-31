@@ -1,4 +1,6 @@
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Input;
+using System.Diagnostics;
 using System; 
 using System.Collections.Generic;
 using System.Linq;
@@ -21,6 +23,8 @@ public class GameObject
     public ObjType Type { get; set; }
     public float Mass = 1f;
     public Vector2 Velocity = Vector2.Zero;
+    public string TextureKey { get; set; }
+    public float Rotation { get; set; } = 0f; 
 
     public GameObject(){}
     
@@ -98,11 +102,40 @@ public class ObjPhysics
 public class ObjectManager
 {
     public ObjPhysics Physics = new ObjPhysics();
-    public List<GameObject> ObjList;
+    public List<GameObject> ObjList = new List<GameObject>(); 
+    bool _spaceReleased = false;
+    public List<Dice> _activeDice => ObjList.OfType<Dice>()
+        .Where(d => d.State != DieState.played)
+        .ToList(); 
     
     public void BirthObject(GameObject obj) => ObjList.Add(obj);
+    public void KillObject(GameObject obj) => ObjList.Remove(obj);
+
+    
+    public void RollDice(bool released)
+    {
+        foreach (Dice die in _activeDice)
+        {
+            die.Roll(); 
+        }
+        
+    }
     public void Update()
     {
+        if (Keyboard.GetState().IsKeyDown(Keys.Space))
+        {
+            if (!_spaceReleased)
+            {
+                RollDice(_spaceReleased);
+                Debug.WriteLine("Space");
+                _spaceReleased = true;
+            }
+            
+        }
+        else
+        {
+            _spaceReleased = false;
+        }
         for (int i = 0; i < ObjList.Count; i++)
         {
             for (int j = i + 1; j < ObjList.Count; j++)
@@ -111,10 +144,19 @@ public class ObjectManager
             }
         }
         
-        List<Dice> _active_dice_list = ObjList.OfType<Dice>().Where(<Dice>(this DieState.free)).ToList();
-        foreach (Dice die in ObjList.OfType<Dice>())
+       
+        foreach (Dice die in _activeDice)
         {
-            
+            if (die.State == DieState.rolling)
+            {
+                // Check if velocity has stopped (or is very close to zero)
+                if (die.Velocity.LengthSquared() < 0.01f) // threshold for "stopped"
+                {
+                    die.State = DieState.free;
+                }
+            }
         }
+
+
     }
 }

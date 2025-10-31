@@ -1,2 +1,2 @@
-﻿using var game = new DiceMG.Game1();
+﻿using var game = new DiceMG.DiceyDivas();
 game.Run();
