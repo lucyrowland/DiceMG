@@ -25,6 +25,7 @@ public class GameObject
     public Vector2 Velocity = Vector2.Zero;
     public string TextureKey { get; set; }
     public float Rotation { get; set; } = 0f; 
+    public Vector2 Acceleration = Vector2.Zero;
 
     public GameObject(){}
     
@@ -45,6 +46,18 @@ public class GameObject
         Width *= scale.X;
         Height *= scale.Y;
     }
+
+    public void Move(float _acceleration, GameTime dt)
+    {
+        // 1. Apply acceleration to velocity
+        Velocity.X += _acceleration * (float)dt.ElapsedGameTime.TotalSeconds;
+        Velocity.Y += _acceleration * (float)dt.ElapsedGameTime.TotalSeconds;
+
+        // 2. Apply velocity to position
+        Position += Velocity * (float)dt.ElapsedGameTime.TotalSeconds;
+        
+    }
+    
     
 }
 
@@ -63,7 +76,7 @@ public class ObjPhysics
             {
                 // Horizontal collision - separate on X axis
                 float direction = (obj1.Position.X < obj2.Position.X) ? -1 : 1;
-                float separation = overlapX / 2f;
+                float separation = overlapX;
                 
                 obj1.Position.X += direction * -separation;
                 obj2.Position.X += direction * separation;
@@ -81,7 +94,7 @@ public class ObjPhysics
             {
                 // Vertical collision - separate on Y axis
                 float direction = (obj1.Position.Y < obj2.Position.Y) ? -1 : 1;
-                float separation = overlapY / 2f;
+                float separation = overlapY;
                 
                 obj1.Position.Y += direction * -separation;
                 obj2.Position.Y += direction * separation;
@@ -95,6 +108,39 @@ public class ObjPhysics
                 obj2.Velocity.Y = ((obj2.Mass - restitution * obj1.Mass) * obj2.Velocity.Y + 
                                    (1 + restitution) * obj1.Mass * obj1.Velocity.Y) / (obj1.Mass + obj2.Mass);
             }
+        }
+    }
+
+    public void CheckScreenBounds(GameObject obj, int screenWidth, int screenHeight)
+    {
+        float restitution = 0.7f; // Bounciness (0 = no bounce, 1 = perfect bounce)
+        
+        // Left edge
+        if (obj.Position.X < 0)
+        {
+            obj.Position.X = 0;
+            obj.Velocity.X = -obj.Velocity.X * restitution;
+        }
+        
+        // Right edge
+        if (obj.Position.X + obj.Width > screenWidth)
+        {
+            obj.Position.X = screenWidth - obj.Width;
+            obj.Velocity.X = -obj.Velocity.X * restitution;
+        }
+        
+        // Top edge
+        if (obj.Position.Y < 0)
+        {
+            obj.Position.Y = 0;
+            obj.Velocity.Y = -obj.Velocity.Y * restitution;
+        }
+        
+        // Bottom edge
+        if (obj.Position.Y + obj.Height > screenHeight)
+        {
+            obj.Position.Y = screenHeight - obj.Height;
+            obj.Velocity.Y = -obj.Velocity.Y * restitution;
         }
     }
 }
@@ -112,21 +158,26 @@ public class ObjectManager
     public void KillObject(GameObject obj) => ObjList.Remove(obj);
 
     
-    public void RollDice(bool released)
+    public void RollDice(GameTime dt)
     {
         foreach (Dice die in _activeDice)
         {
-            die.Roll(); 
+            die.Roll();
+            // Give each die a random velocity for variety
+            Random rand = new Random();
+            die.Velocity = new Vector2(
+                (float)(rand.NextDouble() * 800 - 200), // Random X velocity between -200 and 200
+                (float)(rand.NextDouble() * 800 - 200)  // Random Y velocity between -200 and 200
+            );
         }
-        
     }
-    public void Update()
+    public void Update(GameTime dt)
     {
         if (Keyboard.GetState().IsKeyDown(Keys.Space))
         {
             if (!_spaceReleased)
             {
-                RollDice(_spaceReleased);
+                RollDice(dt);
                 Debug.WriteLine("Space");
                 _spaceReleased = true;
             }
@@ -136,6 +187,31 @@ public class ObjectManager
         {
             _spaceReleased = false;
         }
+        
+        // Update all dice movement every frame
+        foreach (Dice die in _activeDice)
+        {
+            if (die.State == DieState.rolling)
+            {
+                // Apply friction/drag to slow down
+                float friction = 0.98f; // Value between 0 and 1 (lower = more friction)
+                die.Velocity *= friction;
+                
+                // Update position based on velocity
+                die.Position += die.Velocity * (float)dt.ElapsedGameTime.TotalSeconds;
+                
+                // Check screen boundaries and bounce
+                Physics.CheckScreenBounds(die, Global.ScreenWidth, Global.ScreenHeight);
+                
+                // Check if velocity has stopped (or is very close to zero)
+                if (die.Velocity.LengthSquared() < 0.01f) // threshold for "stopped"
+                {
+                    die.Velocity = Vector2.Zero; // Stop completely
+                    die.State = DieState.free;
+                }
+            }
+        }
+        
         for (int i = 0; i < ObjList.Count; i++)
         {
             for (int j = i + 1; j < ObjList.Count; j++)
@@ -143,20 +219,6 @@ public class ObjectManager
                 Physics.BoxCollision(ObjList[i], ObjList[j]);
             }
         }
-        
-       
-        foreach (Dice die in _activeDice)
-        {
-            if (die.State == DieState.rolling)
-            {
-                // Check if velocity has stopped (or is very close to zero)
-                if (die.Velocity.LengthSquared() < 0.01f) // threshold for "stopped"
-                {
-                    die.State = DieState.free;
-                }
-            }
-        }
-
 
     }
 }
