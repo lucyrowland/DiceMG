@@ -19,7 +19,7 @@ public class GameObject
     public float Width { get; set; }
     public float Height { get; set; }
     public Vector2 Position = Vector2.Zero;
-    public Rectangle Box => new Rectangle((int)Position.X, (int)Position.Y, (int)Width, (int)Height);
+    public Rectangle Box => new ((int)Position.X, (int)Position.Y, (int)Width, (int)Height);
     public ObjType Type { get; set; }
     public float Mass = 1f;
     public Vector2 Velocity = Vector2.Zero;
@@ -67,7 +67,7 @@ public class GameObject
 
 public class ObjPhysics
 {
-    public void BoxCollision(GameObject obj1, GameObject obj2)
+    public void BoxCollision(Dice obj1, Dice obj2)
     {
         if (obj1.Box.Intersects(obj2.Box))
         {
@@ -151,10 +151,10 @@ public class ObjPhysics
 
 public class ObjectManager
 {
-    public ObjPhysics Physics = new ObjPhysics();
+    private ObjPhysics Physics = new ObjPhysics();
     public List<GameObject> ObjList = new List<GameObject>(); 
     bool _spaceReleased = false;
-    public List<Dice> _activeDice => ObjList.OfType<Dice>()
+    private List<Dice> _activeDice => ObjList.OfType<Dice>()
         .Where(d => d.State != DieState.played)
         .ToList(); 
     
@@ -162,24 +162,17 @@ public class ObjectManager
     public void KillObject(GameObject obj) => ObjList.Remove(obj);
 
     
-    public void RollDice(GameTime dt)
+    private void RollDice(GameTime dt)
     {
         foreach (Dice die in _activeDice)
         {
             die.Roll();
             // Give each die a random velocity for variety
-            Random rand = new Random();
-            int vel_x = rand.Next(800, 2000);
-            if (vel_x%2 == 0)
-                vel_x = vel_x -1;
-            vel_x =vel_x* -1; 
-            int vel_y = rand.Next(800, 2000);
-            if (vel_y%2 == 0)
-                vel_y =vel_y *-1;
-            vel_y =vel_y*-1; 
+            int vel_x = Random.Shared.Next(-200, 200);
+            int vel_y = Random.Shared.Next(-1000, -500);
             die.Velocity = new Vector2(
                 (float)(vel_x), 
-                (float)(vel_y)  // Random Y velocity between -200 and 200
+                (float)(vel_y) 
             );
         }
     }
@@ -224,11 +217,11 @@ public class ObjectManager
             }
         }
         
-        for (int i = 0; i < ObjList.Count; i++)
+        for (int i = 0; i < _activeDice.Count; i++)
         {
-            for (int j = i + 1; j < ObjList.Count; j++)
+            for (int j = i + 1; j < _activeDice.Count; j++)
             {
-                Physics.BoxCollision(ObjList[i], ObjList[j]);
+                Physics.BoxCollision(_activeDice[i], _activeDice[j]);
             }
         }
 
