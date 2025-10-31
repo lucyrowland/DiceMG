@@ -49,6 +49,10 @@ public class GameObject
 
     public void Move(float _acceleration, GameTime dt)
     {
+
+        if (Velocity.LengthSquared() < 0.01f)
+            return;
+        
         // 1. Apply acceleration to velocity
         Velocity.X += _acceleration * (float)dt.ElapsedGameTime.TotalSeconds;
         Velocity.Y += _acceleration * (float)dt.ElapsedGameTime.TotalSeconds;
@@ -83,7 +87,7 @@ public class ObjPhysics
                 
                 // Bounce velocities with restitution
                 float relativeVelocity = obj1.Velocity.X - obj2.Velocity.X;
-                float restitution = 0.5f; // bounciness (0 = no bounce, 1 = perfect bounce)
+                float restitution = 0.9f; // bounciness (0 = no bounce, 1 = perfect bounce)
                 
                 obj1.Velocity.X = ((obj1.Mass - restitution * obj2.Mass) * obj1.Velocity.X + 
                                    (1 + restitution) * obj2.Mass * obj2.Velocity.X) / (obj1.Mass + obj2.Mass);
@@ -101,7 +105,7 @@ public class ObjPhysics
                 
                 // Bounce velocities with restitution
                 float relativeVelocity = obj1.Velocity.Y - obj2.Velocity.Y;
-                float restitution = 0.5f;
+                float restitution = 0.9f;
                 
                 obj1.Velocity.Y = ((obj1.Mass - restitution * obj2.Mass) * obj1.Velocity.Y + 
                                    (1 + restitution) * obj2.Mass * obj2.Velocity.Y) / (obj1.Mass + obj2.Mass);
@@ -165,9 +169,17 @@ public class ObjectManager
             die.Roll();
             // Give each die a random velocity for variety
             Random rand = new Random();
+            int vel_x = rand.Next(800, 2000);
+            if (vel_x%2 == 0)
+                vel_x = vel_x -1;
+            vel_x =vel_x* -1; 
+            int vel_y = rand.Next(800, 2000);
+            if (vel_y%2 == 0)
+                vel_y =vel_y *-1;
+            vel_y =vel_y*-1; 
             die.Velocity = new Vector2(
-                (float)(rand.NextDouble() * 800 - 200), // Random X velocity between -200 and 200
-                (float)(rand.NextDouble() * 800 - 200)  // Random Y velocity between -200 and 200
+                (float)(vel_x), 
+                (float)(vel_y)  // Random Y velocity between -200 and 200
             );
         }
     }
@@ -194,7 +206,7 @@ public class ObjectManager
             if (die.State == DieState.rolling)
             {
                 // Apply friction/drag to slow down
-                float friction = 0.98f; // Value between 0 and 1 (lower = more friction)
+                float friction = 0.9f; // Value between 0 and 1 (lower = more friction)
                 die.Velocity *= friction;
                 
                 // Update position based on velocity
