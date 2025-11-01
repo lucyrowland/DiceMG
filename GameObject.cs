@@ -115,6 +115,43 @@ public class ObjPhysics
         }
     }
 
+    public void CheckTrayBounds(Dice obj, RollingTray tray)
+    {
+        float restitution = 0.7f; // Bounciness (0 = no bounce, 1 = perfect bounce)
+        
+        var leftbound = tray.Position.X+5;
+        var rightbound = tray.Position.X + tray.Width-5;
+        var topbound = tray.Position.Y+5;
+        var bottombound = tray.Position.Y + tray.Height-5;
+        
+        // Left edge
+        if (obj.Position.X < leftbound)
+        {
+            obj.Position.X = leftbound + 5;
+            obj.Velocity.X = -obj.Velocity.X * restitution;
+        }
+        
+        // Right edge
+        if (obj.Position.X + obj.Width > rightbound)
+        {
+            obj.Position.X = rightbound - obj.Width;
+            obj.Velocity.X = -obj.Velocity.X * restitution;
+        }
+        
+        // Top edge
+        if (obj.Position.Y < topbound)
+        {
+            obj.Position.Y = topbound + 5;
+            obj.Velocity.Y = -obj.Velocity.Y * restitution;
+        }
+        
+        // Bottom edge
+        if (obj.Position.Y + obj.Height > bottombound)
+        {
+            obj.Position.Y = bottombound - obj.Height;
+            obj.Velocity.Y = -obj.Velocity.Y * restitution;
+        }
+    }
     public void CheckScreenBounds(GameObject obj, int screenWidth, int screenHeight)
     {
         float restitution = 0.7f; // Bounciness (0 = no bounce, 1 = perfect bounce)
@@ -160,7 +197,7 @@ public class ObjectManager
     
     public void BirthObject(GameObject obj) => ObjList.Add(obj);
     public void KillObject(GameObject obj) => ObjList.Remove(obj);
-
+    public RollingTray Tray => ObjList.OfType<RollingTray>().FirstOrDefault();
     
     private void RollDice(GameTime dt)
     {
@@ -196,6 +233,8 @@ public class ObjectManager
         // Update all dice movement every frame
         foreach (Dice die in _activeDice)
         {
+            Physics.CheckScreenBounds(die, Global.ScreenWidth, Global.ScreenHeight);
+            Physics.CheckTrayBounds(die, Tray);
             if (die.State == DieState.rolling)
             {
                 // Apply friction/drag to slow down
@@ -206,7 +245,8 @@ public class ObjectManager
                 die.Position += die.Velocity * (float)dt.ElapsedGameTime.TotalSeconds;
                 
                 // Check screen boundaries and bounce
-                Physics.CheckScreenBounds(die, Global.ScreenWidth, Global.ScreenHeight);
+
+                
                 
                 // Check if velocity has stopped (or is very close to zero)
                 if (die.Velocity.LengthSquared() < 0.01f) // threshold for "stopped"

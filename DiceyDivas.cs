@@ -50,7 +50,7 @@ namespace DiceMG
             float trayw = 200f;
             float trayh = 2 * trayw;  // 400
             float trayx = 200f;
-            float trayy = 0f;
+            float trayy = 100f;
             
             Debug.WriteLine($"Tray: x={trayx}, y={trayy}, w={trayw}, h={trayh}");
             Debug.WriteLine($"Tray bounds: ({trayx}, {trayy}) to ({trayx + trayw}, {trayy + trayh})");
