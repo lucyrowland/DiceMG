@@ -8,11 +8,16 @@ public class SpriteManager
 {
     private Dictionary<string, Texture2D> _textures;
     private GraphicsDevice _graphicsDevice;
+    private Texture2D pixel;
+    
+   
     
     public SpriteManager(GraphicsDevice graphicsDevice)
     {
         _graphicsDevice = graphicsDevice;
         _textures = new Dictionary<string, Texture2D>();
+        pixel = new Texture2D(_graphicsDevice, 1, 1);
+        pixel.SetData(new[] { Color.White });
     }
 
     public void LoadTexture(string key, Texture2D texture)
@@ -31,6 +36,19 @@ public class SpriteManager
         }
         return null;
     }
+    // Draw a rectangle outline
+    public void DrawDiceOutline(SpriteBatch spriteBatch, Rectangle rect, Color color, int thickness = 2)
+    {
+        
+        // Top
+        spriteBatch.Draw(pixel, new Rectangle(rect.X, rect.Y, rect.Width, thickness), color);
+        // Bottom
+        spriteBatch.Draw(pixel, new Rectangle(rect.X, rect.Y + rect.Height - thickness, rect.Width, thickness), color);
+        // Left
+        spriteBatch.Draw(pixel, new Rectangle(rect.X, rect.Y, thickness, rect.Height), color);
+        // Right
+        spriteBatch.Draw(pixel, new Rectangle(rect.X + rect.Width - thickness, rect.Y, thickness, rect.Height), color);
+    }
     
     public void Draw(SpriteBatch spriteBatch, string key, GameObject obj, Color color)
     {
@@ -40,6 +58,7 @@ public class SpriteManager
             spriteBatch.Draw(texture, obj.Box, color);
         }
     }
+    
     
     // Draw with rotation (useful for dice)
     public void Draw(SpriteBatch spriteBatch, string key, GameObject obj, float rotation)

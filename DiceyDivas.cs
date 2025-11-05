@@ -101,6 +101,14 @@ namespace DiceMG
             }
         }
 
+        private bool IsMouseOverDice(Dice die)
+        {
+            if (die.Box.Contains(Input.Mouse.Position))
+                return true;
+            
+            return false; 
+        }
+
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(Color.Pink);
@@ -115,6 +123,8 @@ namespace DiceMG
             foreach (Dice die in _objectManager.ObjList.OfType<Dice>()) 
             {
                 SpriteManager.Draw(SpriteBatch, die.TextureKey, die, 0f);
+                if (IsMouseOverDice(die))
+                    SpriteManager.DrawDiceOutline(SpriteBatch, die.Box, Color.White, 2);
             }
 
             SpriteBatch.End();
