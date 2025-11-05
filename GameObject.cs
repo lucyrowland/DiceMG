@@ -4,6 +4,11 @@ using System.Diagnostics;
 using System; 
 using System.Collections.Generic;
 using System.Linq;
+using DiceMG.Input;
+using Microsoft.Xna.Framework.Audio;
+using Microsoft.Xna.Framework.Content;
+using DiceMG.Input;
+
 
 namespace DiceMG;
 
@@ -16,6 +21,7 @@ public enum ObjType
 
 public class GameObject
 {
+    
     public float Width { get; set; }
     public float Height { get; set; }
     public Vector2 Position = Vector2.Zero;
@@ -117,17 +123,18 @@ public class ObjPhysics
 
     public void CheckTrayBounds(Dice obj, RollingTray tray)
     {
-        float restitution = 0.7f; // Bounciness (0 = no bounce, 1 = perfect bounce)
+        float restitution = 0.95f; // Bounciness (0 = no bounce, 1 = perfect bounce)
+        float tray_padding = Global.TRAY_PADDING;
         
-        var leftbound = tray.Position.X+5;
-        var rightbound = tray.Position.X + tray.Width-5;
-        var topbound = tray.Position.Y+5;
-        var bottombound = tray.Position.Y + tray.Height-5;
+        var leftbound = tray.Position.X+tray_padding;
+        var rightbound = tray.Position.X + tray.Width-tray_padding;
+        var topbound = tray.Position.Y+tray_padding;
+        var bottombound = tray.Position.Y + tray.Height-tray_padding;
         
         // Left edge
         if (obj.Position.X < leftbound)
         {
-            obj.Position.X = leftbound + 5;
+            obj.Position.X = leftbound + tray_padding;
             obj.Velocity.X = -obj.Velocity.X * restitution;
         }
         
@@ -141,7 +148,7 @@ public class ObjPhysics
         // Top edge
         if (obj.Position.Y < topbound)
         {
-            obj.Position.Y = topbound + 5;
+            obj.Position.Y = topbound + tray_padding;
             obj.Velocity.Y = -obj.Velocity.Y * restitution;
         }
         
@@ -188,6 +195,7 @@ public class ObjPhysics
 
 public class ObjectManager
 {
+    private SoundEffect _sound; 
     private ObjPhysics Physics = new ObjPhysics();
     public List<GameObject> ObjList = new List<GameObject>(); 
     bool _spaceReleased = false;
@@ -198,6 +206,7 @@ public class ObjectManager
     public void BirthObject(GameObject obj) => ObjList.Add(obj);
     public void KillObject(GameObject obj) => ObjList.Remove(obj);
     public RollingTray Tray => ObjList.OfType<RollingTray>().FirstOrDefault();
+    private InputManager _inputManager = new InputManager();
     
     private void RollDice(GameTime dt)
     {
@@ -205,13 +214,22 @@ public class ObjectManager
         {
             die.Roll();
             // Give each die a random velocity for variety
-            int vel_x = Random.Shared.Next(-200, 200);
-            int vel_y = Random.Shared.Next(-1000, -500);
+            int vel_x = Random.Shared.Next(-400, 400);
+            int vel_y = Random.Shared.Next(-1500, -1000);
             die.Velocity = new Vector2(
                 (float)(vel_x), 
                 (float)(vel_y) 
             );
         }
+    }
+
+
+
+    public void LoadGameContent(ContentManager content)
+    {
+        content.RootDirectory = "Content";
+        _sound = content.Load<SoundEffect>("Audio/medium_dice_roll");
+        
     }
     public void Update(GameTime dt)
     {
@@ -219,26 +237,29 @@ public class ObjectManager
         {
             if (!_spaceReleased)
             {
+                float rand_vol = (float)Random.Shared.NextDouble();
+                float rand_pitch = (float)Random.Shared.NextDouble();
                 RollDice(dt);
+                _sound.Play(rand_vol, rand_pitch, 0f);
                 Debug.WriteLine("Space");
                 _spaceReleased = true;
             }
             
         }
-        else
-        {
-            _spaceReleased = false;
-        }
+
+
+        
         
         // Update all dice movement every frame
         foreach (Dice die in _activeDice)
         {
             Physics.CheckScreenBounds(die, Global.ScreenWidth, Global.ScreenHeight);
             Physics.CheckTrayBounds(die, Tray);
+
             if (die.State == DieState.rolling)
             {
                 // Apply friction/drag to slow down
-                float friction = 0.9f; // Value between 0 and 1 (lower = more friction)
+                float friction = 0.93f; // Value between 0 and 1 (lower = more friction)
                 die.Velocity *= friction;
                 
                 // Update position based on velocity
@@ -249,7 +270,7 @@ public class ObjectManager
                 
                 
                 // Check if velocity has stopped (or is very close to zero)
-                if (die.Velocity.LengthSquared() < 0.01f) // threshold for "stopped"
+                if (die.Velocity.LengthSquared() < 0.5f) // threshold for "stopped"
                 {
                     die.Velocity = Vector2.Zero; // Stop completely
                     die.State = DieState.free;

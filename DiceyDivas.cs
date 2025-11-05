@@ -5,46 +5,36 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System.Collections.Generic;
 using System.Linq;
+using DiceMG.Input;
 
 
 namespace DiceMG
 {
 
-    public class DiceyDivas : Game
+    public class DiceyDivas : Core
     {
-        private GraphicsDeviceManager _graphics;
-        private SpriteBatch _spriteBatch;
-        private SpriteManager _spriteManager;
         private ObjectManager _objectManager = new ObjectManager();
-
         private Texture2D pixelTexture;
         private RollingTray _rollingTray;
         
         private int number_of_dice = 6; 
 
-        public DiceyDivas()
+        public DiceyDivas() : base("Dicey Divas", 1280, 720, false)
         {
-            _graphics = new GraphicsDeviceManager(this);
-            Content.RootDirectory = "Content";
-            IsMouseVisible = true;
-            // Set your desired resolution here
-            _graphics.PreferredBackBufferWidth = 1280;
-            _graphics.PreferredBackBufferHeight = 720;
-            // Make sure to call ApplyChanges() for the changes to take effect
-            _graphics.ApplyChanges();
+
         }
 
         protected override void Initialize()
         {
             base.Initialize();
-            Global.ScreenWidth = GraphicsDevice.Viewport.Width;
             Global.ScreenHeight = GraphicsDevice.Viewport.Height;
+            Global.ScreenWidth = GraphicsDevice.Viewport.Width;
         }
 
         protected override void LoadContent()
         {
-            _spriteBatch = new SpriteBatch(GraphicsDevice);
-            _spriteManager = new SpriteManager(GraphicsDevice);
+            _objectManager.LoadGameContent(Content);
+            base.LoadContent();
             
             // Tray dimensions and position
             float trayw = 200f;
@@ -56,26 +46,23 @@ namespace DiceMG
             Debug.WriteLine($"Tray bounds: ({trayx}, {trayy}) to ({trayx + trayw}, {trayy + trayh})");
             
             // Dice dimensions
-            float dw = 30f;
-            float dh = 30f; 
+            float dw = 35;
+            float dh = 35;
+
+            float TRAY_PADDING = Global.TRAY_PADDING;
             
             // Calculate spawn bounds with padding
-            int DICE_SPAWN_X_LOWERBOUND = (int)(trayx + 5);
-            int DICE_SPAWN_X_UPPERBOUND = (int)(trayx + trayw - dw - 5);
-            int DICE_SPAWN_Y_LOWERBOUND = (int)(trayy + 5);
-            int DICE_SPAWN_Y_UPPERBOUND = (int)(trayy + trayh - dh - 5);
+            int DICE_SPAWN_X_LOWERBOUND = (int)(trayx + TRAY_PADDING);
+            int DICE_SPAWN_X_UPPERBOUND = (int)(trayx + trayw - dw - TRAY_PADDING);
+            int DICE_SPAWN_Y_LOWERBOUND = (int)(trayy + trayh*0.5 + TRAY_PADDING);
+            int DICE_SPAWN_Y_UPPERBOUND = (int)(trayy + trayh - dh - TRAY_PADDING);
             
             Debug.WriteLine($"Dice spawn bounds: X=[{DICE_SPAWN_X_LOWERBOUND}, {DICE_SPAWN_X_UPPERBOUND}] Y=[{DICE_SPAWN_Y_LOWERBOUND}, {DICE_SPAWN_Y_UPPERBOUND}]");
 
             // Load tray sprite
-            _spriteManager.LoadTexture("tray", Content.Load<Texture2D>("tray_sprite"));
             _objectManager.BirthObject(new RollingTray(trayw, trayh, new Vector2(trayx, trayy)));
             
-            // Load all dice face textures (1-6)
-            for (int i = 1; i <= 6; i++)
-            {
-                _spriteManager.LoadTexture("DPurp" + i, Content.Load<Texture2D>("DPurp" + i));
-            }
+
             
             // Create dice and spawn them within the tray
             for (int i = 0; i < number_of_dice; i++)
@@ -90,34 +77,47 @@ namespace DiceMG
         protected override void Update(GameTime gameTime)
         {
             _objectManager.Update(gameTime);
-            
-            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || 
-                Keyboard.GetState().IsKeyDown(Keys.Escape))
-                Exit();
-            
-            Global.ScreenWidth = GraphicsDevice.Viewport.Width;
-            Global.ScreenHeight = GraphicsDevice.Viewport.Height;
+
+            CheckMouse(); 
             
             base.Update(gameTime);
+        }
+
+        private void CheckMouse()
+        {
+            if (Input.Mouse.ButtonPressed(MouseButton.Left))
+            {
+                Debug.WriteLine("left button clicked");
+                var mousePos = Input.Mouse.Position;
+                foreach (Dice die in _objectManager.ObjList.OfType<Dice>())
+                {
+                    if (die.Box.Contains(mousePos))
+                    {
+                        Debug.WriteLine("Holding");
+                        die.Hold();
+                    }
+                }
+
+            }
         }
 
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(Color.Pink);
 
-            _spriteBatch.Begin();
+            SpriteBatch.Begin();
 
             // Draw all objects
             foreach (RollingTray tray in _objectManager.ObjList.OfType<RollingTray>())
             {
-                _spriteManager.Draw(_spriteBatch, tray.TextureKey, tray, Color.White);
+                SpriteManager.Draw(SpriteBatch, tray.TextureKey, tray, Color.White);
             }
             foreach (Dice die in _objectManager.ObjList.OfType<Dice>()) 
             {
-                _spriteManager.Draw(_spriteBatch, die.TextureKey, die, 0f);
+                SpriteManager.Draw(SpriteBatch, die.TextureKey, die, 0f);
             }
 
-            _spriteBatch.End();
+            SpriteBatch.End();
             base.Draw(gameTime);
         }
     }

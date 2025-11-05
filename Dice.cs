@@ -57,6 +57,11 @@ namespace DiceMG
                 (float)(Global.SoRandom.NextDouble() - 0.5) * 500 // random Y velocity
             );
         }
+
+        public void Hold()
+        {
+            TransformS(new Vector2(1.2f,1.2f));
+        }
     }
 }
 

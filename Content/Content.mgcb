@@ -13,6 +13,24 @@
 
 #---------------------------------- Content ---------------------------------#
 
+#begin Audio/many_dice_roll.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Audio/many_dice_roll.wav
+
+#begin Audio/medium_dice_roll.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Audio/medium_dice_roll.wav
+
+#begin Audio/single_dice_roll.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:Audio/single_dice_roll.wav
+
 #begin diceRed_border.png
 /importer:TextureImporter
 /processor:TextureProcessor
