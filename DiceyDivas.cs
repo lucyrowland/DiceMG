@@ -16,6 +16,7 @@ namespace DiceMG
         private ObjectManager _objectManager = new ObjectManager();
         private Texture2D pixelTexture;
         private RollingTray _rollingTray;
+        private float rainbowTimer = 0f;
         
         private int number_of_dice = 6; 
 
@@ -78,7 +79,9 @@ namespace DiceMG
         {
             _objectManager.Update(gameTime);
 
-            CheckMouse(); 
+            foreach (Dice die in _objectManager.ObjList.OfType<Dice>()) 
+                ClickedDice(die);
+            rainbowTimer += (float)gameTime.ElapsedGameTime.TotalSeconds;
             
             base.Update(gameTime);
         }
@@ -94,10 +97,24 @@ namespace DiceMG
                     if (die.Box.Contains(mousePos))
                     {
                         Debug.WriteLine("Holding");
-                        die.Hold();
                     }
                 }
 
+            }
+        }
+
+        private void ClickedDice(Dice die)
+        {
+            if (Input.Mouse.ButtonPressed(MouseButton.Left))
+            {
+                if (die.Box.Contains(Input.Mouse.Position))
+                {
+                    if (die.State != DieState.held)
+                        die.State = DieState.held;
+                    else
+                        die.State = DieState.free;
+                }
+                    
             }
         }
 
@@ -107,6 +124,16 @@ namespace DiceMG
                 return true;
             
             return false; 
+        }
+        // Method to get rainbow color
+        private Color GetRainbowColor(float time, float speed = 2f)
+        {
+            
+            float r = (MathF.Sin(speed * time) + 1f) / 2f;
+            float g = (MathF.Sin(speed * time + 2f) + 1f) / 2f;
+            float b = (MathF.Sin(speed * time + 4f) + 1f) / 2f;
+    
+            return new Color(r, g, b);
         }
 
         protected override void Draw(GameTime gameTime)
@@ -123,8 +150,18 @@ namespace DiceMG
             foreach (Dice die in _objectManager.ObjList.OfType<Dice>()) 
             {
                 SpriteManager.Draw(SpriteBatch, die.TextureKey, die, 0f);
-                if (IsMouseOverDice(die))
+                if (die.State == DieState.held)
+                {
+                    Color rainbowColor = GetRainbowColor(rainbowTimer, 3f);
+                    SpriteManager.DrawDiceOutline(SpriteBatch, die.Box, rainbowColor, 4);
+                    
+                }
+                if (IsMouseOverDice(die) && die.State != DieState.held)
+                {
                     SpriteManager.DrawDiceOutline(SpriteBatch, die.Box, Color.White, 2);
+                }
+
+                    
             }
 
             SpriteBatch.End();

@@ -206,7 +206,6 @@ public class ObjectManager
     public void BirthObject(GameObject obj) => ObjList.Add(obj);
     public void KillObject(GameObject obj) => ObjList.Remove(obj);
     public RollingTray Tray => ObjList.OfType<RollingTray>().FirstOrDefault();
-    private InputManager _inputManager = new InputManager();
     
     private void RollDice(GameTime dt)
     {
