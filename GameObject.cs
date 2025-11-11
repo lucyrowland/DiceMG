@@ -16,6 +16,7 @@ public enum ObjType
 {
     Dice, 
     Tray,
+    Button, 
     Other
 }
 
@@ -32,6 +33,8 @@ public class GameObject
     public string TextureKey { get; set; }
     public float Rotation { get; set; } = 0f; 
     public Vector2 Acceleration = Vector2.Zero;
+    
+    public bool Visible { get; set; } = true;
 
     public GameObject(){}
     
@@ -46,12 +49,15 @@ public class GameObject
     {
         Position += position;
     }
+    public Vector2 Size => new Vector2(Width, Height);
 
     public void TransformS(Vector2 scale)
     {
         Width *= scale.X;
         Height *= scale.Y;
     }
+
+
 
     public void Move(float _acceleration, GameTime dt)
     {
@@ -197,17 +203,69 @@ public class ObjectManager
 {
     private SoundEffect _sound; 
     private ObjPhysics Physics = new ObjPhysics();
+    public Dictionary<string, GameObject> ObjDict = new Dictionary<string, GameObject>();
     public List<GameObject> ObjList = new List<GameObject>(); 
     bool _spaceReleased = false;
     private List<Dice> _activeDice => ObjList.OfType<Dice>()
         .Where(d => d.State != DieState.played)
-        .ToList(); 
-    
+        .ToList();
+    public List<int> ActiveDiceValues => _activeDice.Select(d => d.Value).ToList();
+    private List<Dice> _heldDice => ObjList.OfType<Dice>().Where(d => d.State == DieState.held).ToList();
     public void BirthObject(GameObject obj) => ObjList.Add(obj);
     public void KillObject(GameObject obj) => ObjList.Remove(obj);
-    public RollingTray Tray => ObjList.OfType<RollingTray>().FirstOrDefault();
     
-    private void RollDice(GameTime dt)
+    public void DictAdd(string key, GameObject obj) => ObjDict.Add(key, obj);
+    public void DictRemove(string key) => ObjDict.Remove(key);
+    public GameObject DictGet(string key) => ObjDict[key];
+    public void DictClear() => ObjDict.Clear();
+    public void DictClear(string key) => ObjDict.Remove(key);
+    public void DictClear(List<string> keys)
+    {
+        foreach (string key in keys)
+        {
+            ObjDict.Remove(key);
+        }
+    }
+    public RollingTray Tray => ObjList.OfType<RollingTray>().FirstOrDefault();
+
+    public void ResetRound(int number_of_dice = 6)
+    {
+        //remove dice from screen from previous round 
+        foreach (Dice die in ObjList.OfType<Dice>())
+            KillObject(die);
+        
+        // Tray dimensions and position
+        float trayw = 200f;
+        float trayh = 2 * trayw;  // 400
+        float trayx = 200f;
+        float trayy = 100f;
+        
+        // Dice dimensions
+        float dw = 35;
+        float dh = 35;
+
+        float TRAY_PADDING = Global.TRAY_PADDING;
+            
+        // Calculate spawn bounds with padding
+        int DICE_SPAWN_X_LOWERBOUND = (int)(trayx + TRAY_PADDING);
+        int DICE_SPAWN_X_UPPERBOUND = (int)(trayx + trayw - dw - TRAY_PADDING);
+        int DICE_SPAWN_Y_LOWERBOUND = (int)(trayy + trayh*0.5 + TRAY_PADDING);
+        int DICE_SPAWN_Y_UPPERBOUND = (int)(trayy + trayh - dh - TRAY_PADDING);
+
+        // Create dice and spawn them within the tray
+        for (int i = 0; i < number_of_dice; i++)
+        {
+            int dx = Random.Shared.Next(DICE_SPAWN_X_LOWERBOUND, DICE_SPAWN_X_UPPERBOUND);
+            int dy = Random.Shared.Next(DICE_SPAWN_Y_LOWERBOUND, DICE_SPAWN_Y_UPPERBOUND);
+            Debug.WriteLine($"Spawning die {i + 1} at ({dx}, {dy})");
+            BirthObject(new Dice(dw, dh, new Vector2(dx, dy)));
+        }
+
+        RollDice();
+        ScoringSystem.Reset(); 
+    }
+    
+    public void RollDice()
     {
         foreach (Dice die in _activeDice)
         {
@@ -223,7 +281,17 @@ public class ObjectManager
     }
 
 
+    public void RemoveLockedInDice()
+    {
+        foreach (Dice die in _heldDice)
+        {
+            die.Visible = false;
+            die.State = DieState.played;
+            KillObject(die);
 
+        }
+             
+    }
     public void LoadGameContent(ContentManager content)
     {
         content.RootDirectory = "Content";
@@ -232,23 +300,7 @@ public class ObjectManager
     }
     public void Update(GameTime dt)
     {
-        if (Keyboard.GetState().IsKeyDown(Keys.Space))
-        {
-            if (!_spaceReleased)
-            {
-                float rand_vol = (float)Random.Shared.NextDouble();
-                float rand_pitch = (float)Random.Shared.NextDouble();
-                RollDice(dt);
-                _sound.Play(rand_vol, rand_pitch, 0f);
-                Debug.WriteLine("Space");
-                _spaceReleased = true;
-            }
-            
-        }
 
-
-        
-        
         // Update all dice movement every frame
         foreach (Dice die in _activeDice)
         {

@@ -22,7 +22,7 @@ namespace DiceMG
 
         public int _sides = 6;
         public DieState State = DieState.free;
-        private int _side_up;
+        private int _side_up = 1;
 
         public int Value
         {

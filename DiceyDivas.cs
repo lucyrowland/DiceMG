@@ -6,19 +6,21 @@ using Microsoft.Xna.Framework.Input;
 using System.Collections.Generic;
 using System.Linq;
 using DiceMG.Input;
-
+using Apos.Shapes; 
 
 namespace DiceMG
 {
 
     public class DiceyDivas : Core
     {
-        private ObjectManager _objectManager = new ObjectManager();
         private Texture2D pixelTexture;
         private RollingTray _rollingTray;
-        private float rainbowTimer = 0f;
+        private ScoringSystem ScoringSystem;
+        public SpriteFont _windowsXPFont; 
+        public int _tempScore = 0;
+        public List<int> _heldDice = new List<int>();
         
-        private int number_of_dice = 6; 
+        public int number_of_dice = 6; 
 
         public DiceyDivas() : base("Dicey Divas", 1280, 720, false)
         {
@@ -28,14 +30,18 @@ namespace DiceMG
         protected override void Initialize()
         {
             base.Initialize();
+            ScoringSystem = new ScoringSystem();
             Global.ScreenHeight = GraphicsDevice.Viewport.Height;
             Global.ScreenWidth = GraphicsDevice.Viewport.Width;
         }
 
         protected override void LoadContent()
         {
-            _objectManager.LoadGameContent(Content);
+            GameObjManager.LoadGameContent(Content);
             base.LoadContent();
+            
+            //Font initialization
+            _windowsXPFont = Content.Load<SpriteFont>("Fonts/File");
             
             // Tray dimensions and position
             float trayw = 200f;
@@ -43,8 +49,6 @@ namespace DiceMG
             float trayx = 200f;
             float trayy = 100f;
             
-            Debug.WriteLine($"Tray: x={trayx}, y={trayy}, w={trayw}, h={trayh}");
-            Debug.WriteLine($"Tray bounds: ({trayx}, {trayy}) to ({trayx + trayw}, {trayy + trayh})");
             
             // Dice dimensions
             float dw = 35;
@@ -58,48 +62,65 @@ namespace DiceMG
             int DICE_SPAWN_Y_LOWERBOUND = (int)(trayy + trayh*0.5 + TRAY_PADDING);
             int DICE_SPAWN_Y_UPPERBOUND = (int)(trayy + trayh - dh - TRAY_PADDING);
             
-            Debug.WriteLine($"Dice spawn bounds: X=[{DICE_SPAWN_X_LOWERBOUND}, {DICE_SPAWN_X_UPPERBOUND}] Y=[{DICE_SPAWN_Y_LOWERBOUND}, {DICE_SPAWN_Y_UPPERBOUND}]");
 
-            // Load tray sprite
-            _objectManager.BirthObject(new RollingTray(trayw, trayh, new Vector2(trayx, trayy)));
+            // Load tray sprite and buttons
+            RollingTray P1Tray = new RollingTray(trayw, trayh, new Vector2(trayx, trayy));
+            GameObject LockButton = new GameObject(500,100,new Vector2(450,420), ObjType.Button);
+            GameObject PassButton = new GameObject(500,100,new Vector2(450,550), ObjType.Button);
+            GameObjManager.BirthObject(P1Tray);
+            GameObjManager.DictAdd("P1Tray", P1Tray ); 
+            GameObjManager.BirthObject(LockButton);
+            GameObjManager.DictAdd("LockButton", LockButton );
+            GameObjManager.BirthObject(PassButton);
+            GameObjManager.DictAdd("PassButton", PassButton );
             
 
             
-            // Create dice and spawn them within the tray
-            for (int i = 0; i < number_of_dice; i++)
-            {
-                int dx = Random.Shared.Next(DICE_SPAWN_X_LOWERBOUND, DICE_SPAWN_X_UPPERBOUND);
-                int dy = Random.Shared.Next(DICE_SPAWN_Y_LOWERBOUND, DICE_SPAWN_Y_UPPERBOUND);
-                Debug.WriteLine($"Spawning die {i + 1} at ({dx}, {dy})");
-                _objectManager.BirthObject(new Dice(dw, dh, new Vector2(dx, dy)));
-            }
+
         }
 
         protected override void Update(GameTime gameTime)
         {
-            _objectManager.Update(gameTime);
+            GameObjManager.Update(gameTime);
 
-            foreach (Dice die in _objectManager.ObjList.OfType<Dice>()) 
+            foreach (Dice die in GameObjManager.ObjList.OfType<Dice>()) 
                 ClickedDice(die);
-            rainbowTimer += (float)gameTime.ElapsedGameTime.TotalSeconds;
+            CheckForRoll(gameTime);
+            CheckForLockButtonClick();
             
+            _heldDice = GameObjManager.ObjList.OfType<Dice>().Where(d => d.State == DieState.held).Select(d => d.Value).ToList();
+            _tempScore = ScoringSystem.ShowScore(_heldDice);
+            
+            if (Input.Keyboard.KeyPressed(Keys.N))
+                GameObjManager.ResetRound(number_of_dice);  
             base.Update(gameTime);
+            
         }
 
-        private void CheckMouse()
+        private void CheckForPassButtonClick()
         {
-            if (Input.Mouse.ButtonPressed(MouseButton.Left))
-            {
-                Debug.WriteLine("left button clicked");
-                var mousePos = Input.Mouse.Position;
-                foreach (Dice die in _objectManager.ObjList.OfType<Dice>())
-                {
-                    if (die.Box.Contains(mousePos))
-                    {
-                        Debug.WriteLine("Holding");
-                    }
-                }
+            GameObject passbutton = GameObjManager.DictGet("PassButton");
+            if (Input.Mouse.ButtonPressed(MouseButton.Left) && passbutton.Box.Contains(Input.Mouse.Position))
+                ClickPassButton();
+        }
 
+        private void CheckForLockButtonClick()
+        {
+            GameObject lockbutton = GameObjManager.DictGet("LockButton");
+            if (Input.Mouse.ButtonPressed(MouseButton.Left) && lockbutton.Box.Contains(Input.Mouse.Position))
+                ClickLockButton();
+        }
+
+        private void CheckForRoll(GameTime dt)
+        {
+            if (Input.Keyboard.IsKeyDown(Keys.Space))
+            {
+                float rand_vol = (float)Random.Shared.NextDouble();
+                float rand_pitch = (float)Random.Shared.NextDouble();
+                GameObjManager.RollDice();
+                //_sound.Play(rand_vol, rand_pitch, 0f);
+                Debug.WriteLine("Space");
+            
             }
         }
 
@@ -107,6 +128,7 @@ namespace DiceMG
         {
             if (Input.Mouse.ButtonPressed(MouseButton.Left))
             {
+                
                 if (die.Box.Contains(Input.Mouse.Position))
                 {
                     if (die.State != DieState.held)
@@ -114,7 +136,8 @@ namespace DiceMG
                     else
                         die.State = DieState.free;
                 }
-                    
+                Debug.WriteLine($"Die Value: {die.Value}, Die State: {die.State}");
+                Debug.WriteLine($"Score: {ScoringSystem.ShowScore(_heldDice)}");
             }
         }
 
@@ -135,37 +158,124 @@ namespace DiceMG
     
             return new Color(r, g, b);
         }
+        public void DrawDiceOutline(ShapeBatch shapeBatch, Dice die)
+        {
+            if (die.State == DieState.held)
+            {
+                DrawOutline(die, Color.Gold, 2f, 2f, 5f);
+                    
+            }
+            if (IsMouseOverDice(die) && die.State != DieState.held)
+            {
+                DrawOutline(die, Color.White, 2f, 2f, 5f);
+
+            }
+
+            void DrawOutline(Dice die, Color colour, float thickness, float offset, float rounded)
+            {
+                Vector2 pos = die.Position - new Vector2(offset, offset);
+                Vector2 size = die.Size + new Vector2(offset, offset);
+                shapeBatch.BorderRectangle(pos, size, colour, thickness, rounded);
+            }
+            
+
+        }
 
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(Color.Pink);
 
             SpriteBatch.Begin();
-
+            
             // Draw all objects
-            foreach (RollingTray tray in _objectManager.ObjList.OfType<RollingTray>())
+            foreach (RollingTray tray in GameObjManager.ObjList.OfType<RollingTray>())
             {
                 SpriteManager.Draw(SpriteBatch, tray.TextureKey, tray, Color.White);
             }
-            foreach (Dice die in _objectManager.ObjList.OfType<Dice>()) 
+            foreach (Dice die in GameObjManager.ObjList.OfType<Dice>()) 
             {
-                SpriteManager.Draw(SpriteBatch, die.TextureKey, die, 0f);
-                if (die.State == DieState.held)
-                {
-                    Color rainbowColor = GetRainbowColor(rainbowTimer, 3f);
-                    SpriteManager.DrawDiceOutline(SpriteBatch, die.Box, rainbowColor, 4);
-                    
-                }
-                if (IsMouseOverDice(die) && die.State != DieState.held)
-                {
-                    SpriteManager.DrawDiceOutline(SpriteBatch, die.Box, Color.White, 2);
-                }
-
-                    
+                if (die.Visible)
+                    SpriteManager.Draw(SpriteBatch, die.TextureKey, die, 0f);
             }
+            
+            string held_dice_display = String.Join(',', _heldDice);
 
+            SpriteBatch.DrawString(_windowsXPFont, "Press Space to Roll", new Vector2(10, 10), Color.White);
+            SpriteBatch.DrawString(_windowsXPFont, $"Held Dice: {held_dice_display}" , new Vector2(500, 250), Color.White);
+            SpriteBatch.DrawString(_windowsXPFont, "Held Score: " + _tempScore, new Vector2(500, 300), Color.White);
+            SpriteBatch.DrawString(_windowsXPFont, "Total Score: " + ScoringSystem.GetTotalScore(), new Vector2(500, 350), Color.White);
+            
             SpriteBatch.End();
+            
+            // Draw shapes after sprites
+            ShapeBatch.Begin();
+            
+            foreach (Dice die in GameObjManager.ObjList.OfType<Dice>()) 
+                DrawDiceOutline(ShapeBatch, die);
+
+            LockButton(ShapeBatch);
+            PassButton(ShapeBatch);
+            
+            ShapeBatch.End(); 
+            
+            SpriteBatch.Begin();
+            SpriteBatch.DrawString(_windowsXPFont, "Lock and Roll Again", new Vector2(490,440), Color.White);
+            SpriteBatch.DrawString(_windowsXPFont, "Lock and Pass Round", new Vector2(490,570), Color.White);
+            SpriteBatch.End();
+            
+            GameOverScreen(SpriteBatch, ShapeBatch);
             base.Draw(gameTime);
         }
+
+        private void LockButton(ShapeBatch _sb)
+        {
+            GameObject lockbutton = GameObjManager.DictGet("LockButton");
+            if (lockbutton.Box.Contains(Input.Mouse.Position)) 
+                _sb.DrawRectangle(lockbutton.Position, lockbutton.Size, Color.Gold, Color.White, 4f, 2f);
+            else
+                _sb.DrawRectangle(lockbutton.Position, lockbutton.Size, ColourInventory.DicePurple, Color.White, 4f, 2f);
+        }
+        private void PassButton(ShapeBatch _sb)
+        {
+            GameObject passbutton = GameObjManager.DictGet("PassButton");
+            if (passbutton.Box.Contains(Input.Mouse.Position)) 
+                _sb.DrawRectangle(passbutton.Position, passbutton.Size, Color.Gold, Color.White, 4f, 2f);
+            else
+                _sb.DrawRectangle(passbutton.Position, passbutton.Size, ColourInventory.DicePurple, Color.White, 4f, 2f);
+        }
+
+        private void ClickLockButton()
+        {
+            if (ScoringSystem.GetTempScore() > 0)
+            {
+                ScoringSystem.AddScore(); 
+                GameObjManager.RemoveLockedInDice();
+                GameObjManager.RollDice();
+            }
+                
+        }
+
+        private void ClickPassButton()
+        {
+            GameObjManager.ResetRound(number_of_dice);
+        }
+
+        private void GameOverScreen(SpriteBatch spriteBatch, ShapeBatch sb)
+        {
+            if (!GameObjManager.ObjList.OfType<Dice>().Any(d => d.State == DieState.rolling))
+                if (!ScoringSystem.PossibleScore())
+                {
+                    sb.Begin(); 
+                    sb.DrawRectangle(new Vector2(100, 100), new Vector2(1000, 600), Color.Black, Color.White, 4f, 2f);
+                    sb.End(); 
+                    
+                    spriteBatch.Begin();
+                    spriteBatch.DrawString(_windowsXPFont, "Game Over", new Vector2(500, 300), Color.White);
+                    SpriteBatch.DrawString(_windowsXPFont, $"Rolled a dead hand: {String.Join(",",GameObjManager.ActiveDiceValues)}", new Vector2(400, 425), Color.White);
+                    spriteBatch.DrawString(_windowsXPFont, "Press N to Restart", new Vector2(450, 550), Color.White);
+                    spriteBatch.End();
+                }
+        }
     }
+    
 }

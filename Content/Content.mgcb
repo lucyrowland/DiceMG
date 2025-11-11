@@ -115,6 +115,13 @@
 /processorParam:TextureFormat=Color
 /build:DPurp6.png
 
+#begin Fonts/File.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Compressed
+/build:Fonts/File.spritefont
+
 #begin tray_designs_v1.png
 /importer:TextureImporter
 /processor:TextureProcessor

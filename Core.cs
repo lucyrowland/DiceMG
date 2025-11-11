@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using DiceMG.Input;
+using Apos.Shapes;
 
 namespace DiceMG;
 
@@ -27,6 +28,10 @@ public class Core : Game
     
     //load in homemade input manager made in the input folder 
     public static InputManager Input { get; private set; }
+    
+    public static ShapeBatch ShapeBatch { get; private set; }
+    
+    public static ObjectManager GameObjManager { get; private set; }
     
     public static bool ExitOnEscape { get; set; }
     
@@ -63,6 +68,8 @@ public class Core : Game
         GraphicsDevice = base.GraphicsDevice;
         SpriteBatch = new SpriteBatch(GraphicsDevice);
         SpriteManager = new SpriteManager(GraphicsDevice);
+        ShapeBatch = new ShapeBatch(GraphicsDevice, Content);
+        GameObjManager = new ObjectManager();
         
         //create instances for spritebatch and input manager
         //SpriteBatch = new SpriteBatch(GraphicsDevice);
@@ -80,6 +87,7 @@ public class Core : Game
         }
         //load tray texture
         SpriteManager.LoadTexture("tray", Content.Load<Texture2D>("tray_sprite"));
+        
 
     }
 

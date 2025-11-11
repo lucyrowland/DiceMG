@@ -1,6 +1,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
+using Apos.Shapes;
 
 namespace DiceMG;
 
@@ -36,19 +37,8 @@ public class SpriteManager
         }
         return null;
     }
-    // Draw a rectangle outline
-    public void DrawDiceOutline(SpriteBatch spriteBatch, Rectangle rect, Color color, int thickness)
-    {
-        int offset = 3;   
-        // Top
-        spriteBatch.Draw(pixel, new Rectangle(rect.X-offset, rect.Y-offset, rect.Width+2*offset, thickness), color);
-        // Bottom
-        spriteBatch.Draw(pixel, new Rectangle(rect.X-offset, rect.Y + rect.Height - thickness + offset, rect.Width+2*offset, thickness), color);
-        // Left
-        spriteBatch.Draw(pixel, new Rectangle(rect.X-offset, rect.Y-offset, thickness, rect.Height+2*offset), color);
-        // Right
-        spriteBatch.Draw(pixel, new Rectangle(rect.X + rect.Width - thickness+offset, rect.Y-offset, thickness, rect.Height+2*offset), color);
-    }
+
+
     
     public void Draw(SpriteBatch spriteBatch, string key, GameObject obj, Color color)
     {
