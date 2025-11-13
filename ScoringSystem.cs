@@ -10,8 +10,8 @@ namespace DiceMG;
 
 public class ScoringSystem
 {
-    public Dictionary<List<int>, int> ScoreReference;
-    public Dictionary<int, int> ExtraDiceScore;
+    public static Dictionary<List<int>, int> ScoreReference;
+    public static Dictionary<int, int> ExtraDiceScore;
     public static int TotalScore = 0; 
     
     public ScoringSystem()
@@ -38,7 +38,7 @@ public class ScoringSystem
         ExtraDiceScore.Add(6,600);
     }
     
-    private bool ListsEqual(List<int> a, List<int> b)
+    private static bool ListsEqual(List<int> a, List<int> b)
     {
         if (a.Count != b.Count) return false;
         for (int i = 0; i < a.Count; i++)
@@ -53,12 +53,12 @@ public class ScoringSystem
         TotalScore = 0;
     }
 
-    public void AddScore()
+    public static void AddScore()
     {
         TotalScore += GetTempScore(); 
     }
 
-    public int GetTotalScore()
+    public static int GetTotalScore()
     {
         return TotalScore;
     }
@@ -79,13 +79,13 @@ public class ScoringSystem
         return false;
     }
 
-    public int GetTempScore()
+    public static int GetTempScore()
     {
         var helddice = Core.GameObjManager.ObjList.OfType<Dice>().Where(d => d.State == DieState.held).Select(d => d.Value).ToList();
         return ShowScore(helddice);
     }
     
-    public int ShowScore(List<int> dice)
+    public static int ShowScore(List<int> dice)
     {
         int score = 0;
         
