@@ -19,6 +19,7 @@ namespace DiceMG
         public SpriteFont _windowsXPFont; 
         public int _tempScore = 0;
         public List<int> _heldDice = new List<int>();
+        public static GameManager GM = new GameManager();
         
         public int number_of_dice = 6; 
 
@@ -26,11 +27,11 @@ namespace DiceMG
         {
 
         }
+        
 
         protected override void Initialize()
         {
-            base.Initialize();
-            ScoringSystem = new ScoringSystem();
+            base.Initialize(); 
             Global.ScreenHeight = GraphicsDevice.Viewport.Height;
             Global.ScreenWidth = GraphicsDevice.Viewport.Width;
         }
@@ -246,9 +247,10 @@ namespace DiceMG
 
         private void ClickLockButton()
         {
+            
             if (ScoringSystem.GetTempScore() > 0)
             {
-                ScoringSystem.AddScore(); 
+                GM.NextRound();
                 GameObjManager.RemoveLockedInDice();
                 GameObjManager.RollDice();
             }
@@ -258,6 +260,7 @@ namespace DiceMG
         private void ClickPassButton()
         {
             GameObjManager.ResetRound(number_of_dice);
+            GM.SkipTurn(); 
         }
 
         private void GameOverScreen(SpriteBatch spriteBatch, ShapeBatch sb)
@@ -270,10 +273,12 @@ namespace DiceMG
                     sb.End(); 
                     
                     spriteBatch.Begin();
-                    spriteBatch.DrawString(_windowsXPFont, "Game Over", new Vector2(500, 300), Color.White);
+                    spriteBatch.DrawString(_windowsXPFont, "FLOP", new Vector2(500, 300), Color.White);
                     SpriteBatch.DrawString(_windowsXPFont, $"Rolled a dead hand: {String.Join(",",GameObjManager.ActiveDiceValues)}", new Vector2(400, 425), Color.White);
-                    spriteBatch.DrawString(_windowsXPFont, "Press N to Restart", new Vector2(450, 550), Color.White);
+                    spriteBatch.DrawString(_windowsXPFont, "Press N to go to next round", new Vector2(450, 550), Color.White);
                     spriteBatch.End();
+
+                    GM.FlopTurn(); 
                 }
         }
     }

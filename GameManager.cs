@@ -23,19 +23,21 @@ public enum TurnState { Player1, Player2 }
 
 public class GameManager
 {
-    public Dictionary<int, int> Scores = new Dictionary<int, int>();
-    public Dictionary<int, Player> Players = new Dictionary<int, Player>();
-    public int Round; 
-    public GameState State;
-    private TurnState CurrentTurn;
-    public int NumPlayers = 1;
+    public static Dictionary<int, int> Scores = new Dictionary<int, int>();
+    public static Dictionary<int, Player> Players = new Dictionary<int, Player>();
+    public static int Round; 
+    public static GameState State;
+    public static TurnState CurrentTurn;
+    public static int NumPlayers = 1;
     public Dictionary<string, int> LevelScores = new Dictionary<string, int>();
-    public string Level = "Short";
-    public int CurrentLevelScore;
-    public Player Winner = null;
+    public static string Level = "Short";
+    public static int CurrentLevelScore;
+    public static Player Winner = null;
+    public static bool Multiplayer;
 
     public GameManager(int numPlayers, string level)
     {
+        Multiplayer = true;
          CurrentTurn = TurnState.Player1;
          NumPlayers = numPlayers;
          Round = 1; 
@@ -52,6 +54,22 @@ public class GameManager
          GenerateLevels();
          Level = level; 
          CurrentLevelScore = LevelScores[level];
+    }
+
+    public GameManager()
+    {
+        Multiplayer = false;
+        CurrentTurn = TurnState.Player1;
+        NumPlayers = 1;
+        Round = 1; 
+        State = GameState.NewGame;
+        Players.Add(1, new Player("Player 1", 1));
+        Scores.Add(1, 0);
+        Debug.WriteLine($"Player 1 added");
+        
+        GenerateLevels();
+        Level = "Short"; 
+        CurrentLevelScore = LevelScores[Level];
     }
 
     public void GenerateLevels()
@@ -83,15 +101,18 @@ public class GameManager
         //ScoringSystem.NewRound(); to reset tempscore and roundscore to 0 
     }
     
-    public void ChangeTurn()
+    public static void ChangeTurn()
     {
+        if (!Multiplayer)
+            return;
         if (CurrentTurn == TurnState.Player1)
             CurrentTurn = TurnState.Player2;
         else
             CurrentTurn = TurnState.Player1;
+
     }
 
-    public void GameWonCheck()
+    public static void GameWonCheck()
     {
         foreach (var score in Scores)
         {
