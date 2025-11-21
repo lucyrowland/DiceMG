@@ -117,7 +117,15 @@ public class Core : Game
 
     public static void ChangeScene(Scene scene)
     {
-        if(s_currentScene != null) s_nextScene = scene;
+        if(s_currentScene != null) 
+            s_nextScene = scene;
+        else
+        {
+            // Handle initial scene setup
+            s_currentScene = scene;
+            if(s_currentScene != null) 
+                s_currentScene.Initialize();
+        }
     }
 
     public static void TransitionScene()

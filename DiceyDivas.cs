@@ -5,8 +5,10 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using DiceMG.Input;
 using Apos.Shapes; 
+using DiceMG.Scenes;
 
 namespace DiceMG
 {
@@ -17,6 +19,8 @@ namespace DiceMG
         private RollingTray _rollingTray;
         private ScoringSystem ScoringSystem;
         public SpriteFont _windowsXPFont; 
+        public SpriteFont _font;
+        public SpriteFont _font5x;
         public int _tempScore = 0;
         public List<int> _heldDice = new List<int>();
         public static GameManager GM = new GameManager();
@@ -27,20 +31,26 @@ namespace DiceMG
         {
 
         }
-        
+
 
         protected override void Initialize()
         {
             base.Initialize(); 
             Global.ScreenHeight = GraphicsDevice.Viewport.Height;
             Global.ScreenWidth = GraphicsDevice.Viewport.Width;
+            
+            ChangeScene(new TitleScene());
         }
 
         protected override void LoadContent()
         {
-            GameObjManager.LoadGameContent(Content);
-            base.LoadContent();
             
+            
+            base.LoadContent();
+            _font = Content.Load<SpriteFont>("Fonts/File");
+            _font5x = Content.Load<SpriteFont>("Fonts/5x");
+            /*
+            GameObjManager.LoadGameContent(Content);
             //Font initialization
             _windowsXPFont = Content.Load<SpriteFont>("Fonts/File");
             
@@ -74,7 +84,7 @@ namespace DiceMG
             GameObjManager.DictAdd("LockButton", LockButton );
             GameObjManager.BirthObject(PassButton);
             GameObjManager.DictAdd("PassButton", PassButton );
-            
+            */
 
             
 
@@ -82,6 +92,7 @@ namespace DiceMG
 
         protected override void Update(GameTime gameTime)
         {
+            /*
             GameObjManager.Update(gameTime);
 
             foreach (Dice die in GameObjManager.ObjList.OfType<Dice>()) 
@@ -94,7 +105,9 @@ namespace DiceMG
             
             if (Input.Keyboard.KeyPressed(Keys.N))
                 GameObjManager.ResetRound(number_of_dice);  
+            */
             base.Update(gameTime);
+            
             
         }
 
@@ -184,6 +197,7 @@ namespace DiceMG
 
         protected override void Draw(GameTime gameTime)
         {
+            /*
             GraphicsDevice.Clear(Color.Pink);
 
             SpriteBatch.Begin();
@@ -225,7 +239,9 @@ namespace DiceMG
             SpriteBatch.End();
             
             GameOverScreen(SpriteBatch, ShapeBatch);
+            */
             base.Draw(gameTime);
+            
         }
 
         private void LockButton(ShapeBatch _sb)
