@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using DiceMG.Input;
 using Apos.Shapes;
+using DiceMG.Scenes;
 
 namespace DiceMG;
 
@@ -14,6 +15,10 @@ public class Core : Game
     
     //reference to core instance
     public static Core Instance => s_instance;
+    
+    //scene management variables 
+    private static Scene s_currentScene;
+    private static Scene s_nextScene;
     
     //load in graphics device manager and graphics device
     public static GraphicsDeviceManager Graphics { get; private set; }
@@ -98,6 +103,31 @@ public class Core : Game
         {
             Exit(); 
         }
+
+        if (s_nextScene != null) TransitionScene(); 
+        if (s_currentScene != null) s_currentScene.Update(gameTime);
         base.Update(gameTime);
+    }
+
+    protected override void Draw(GameTime gameTime)
+    {
+        if (s_currentScene != null) s_currentScene.Draw(gameTime);
+        base.Draw(gameTime);
+    }
+
+    public static void ChangeScene(Scene scene)
+    {
+        if(s_currentScene != null) s_nextScene = scene;
+    }
+
+    public static void TransitionScene()
+    {
+        if (s_currentScene != null) s_currentScene.Dispose();
+        GC.Collect(); 
+        
+        s_currentScene = s_nextScene;
+        s_nextScene = null;
+        
+        if(s_currentScene != null) s_currentScene.Initialize();
     }
 }
