@@ -23,7 +23,6 @@ namespace DiceMG
         public SpriteFont _font5x;
         public int _tempScore = 0;
         public List<int> _heldDice = new List<int>();
-        public static GameManager GM = new GameManager();
         
         public int number_of_dice = 6; 
 

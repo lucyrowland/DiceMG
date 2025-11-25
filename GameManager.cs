@@ -19,7 +19,7 @@ public enum GameState
 
 
 
-public enum TurnState { Player1, Player2 }
+public enum TurnProcedure { Player1, Player2 }
 
 public class GameManager
 {
@@ -27,21 +27,22 @@ public class GameManager
     public static Dictionary<int, Player> Players = new Dictionary<int, Player>();
     public static int Round; 
     public static GameState State;
-    public static TurnState CurrentTurn;
+    public static TurnProcedure CurrentTurn;
     public static int NumPlayers = 1;
     public Dictionary<string, int> LevelScores = new Dictionary<string, int>();
     public static string Level = "Short";
     public static int CurrentLevelScore;
     public static Player Winner = null;
     public static bool Multiplayer;
-
+    public EventHandler<GameStateArgs> StateChangedHandler;
+    
     public GameManager(int numPlayers, string level)
     {
         Multiplayer = true;
-         CurrentTurn = TurnState.Player1;
+         CurrentTurn = TurnProcedure.Player1;
          NumPlayers = numPlayers;
          Round = 1; 
-         State = GameState.NewGame;
+         ChangeState(GameState.NewGame);
 
          for (int i = 0; i < numPlayers; i++)
          {
@@ -59,10 +60,10 @@ public class GameManager
     public GameManager()
     {
         Multiplayer = false;
-        CurrentTurn = TurnState.Player1;
+        CurrentTurn = TurnProcedure.Player1;
         NumPlayers = 1;
         Round = 1; 
-        State = GameState.NewGame;
+        ChangeState(GameState.NewGame);
         Players.Add(1, new Player("Player 1", 1));
         Scores.Add(1, 0);
         Debug.WriteLine($"Player 1 added");
@@ -70,6 +71,11 @@ public class GameManager
         GenerateLevels();
         Level = "Short"; 
         CurrentLevelScore = LevelScores[Level];
+    }
+    public void ChangeState(GameState newState)
+    {
+        State = newState;
+        StateChangedHandler?.Invoke(this, new GameStateArgs(newState));
     }
 
     public void GenerateLevels()
@@ -82,14 +88,14 @@ public class GameManager
     public void NextRound()
     {
         ChangeTurn();
-        if (CurrentTurn == TurnState.Player1) Round++;
+        if (CurrentTurn == TurnProcedure.Player1) Round++;
         ScoringSystem.AddScore();
     }
 
     public void SkipTurn()
     {
         ChangeTurn();
-        if (CurrentTurn == TurnState.Player1) Round++;
+        if (CurrentTurn == TurnProcedure.Player1) Round++;
         //ScoringSystem.NewRound();
         ScoringSystem.AddScore(); //need to add temp score and round score to scoring system
     }
@@ -97,7 +103,7 @@ public class GameManager
     public void FlopTurn()
     {
         ChangeTurn();
-        if (CurrentTurn == TurnState.Player1) Round++;
+        if (CurrentTurn == TurnProcedure.Player1) Round++;
         //ScoringSystem.NewRound(); to reset tempscore and roundscore to 0 
     }
     
@@ -105,20 +111,20 @@ public class GameManager
     {
         if (!Multiplayer)
             return;
-        if (CurrentTurn == TurnState.Player1)
-            CurrentTurn = TurnState.Player2;
+        if (CurrentTurn == TurnProcedure.Player1)
+            CurrentTurn = TurnProcedure.Player2;
         else
-            CurrentTurn = TurnState.Player1;
+            CurrentTurn = TurnProcedure.Player1;
 
     }
 
-    public static void GameWonCheck()
+    public void GameWonCheck()
     {
         foreach (var score in Scores)
         {
             if (score.Value >= CurrentLevelScore)
             {
-                State = GameState.GameWon;
+                ChangeState(GameState.GameWon);
                 Winner = Players[score.Key];
                 return;
             }
@@ -127,7 +133,18 @@ public class GameManager
 
     public void NewGame()
     {
-        State = GameState.NewGame;
+        ChangeState(GameState.NewGame);
         ScoringSystem.Reset();
+    }
+    
+}
+
+public class GameStateArgs: EventArgs
+{
+    public GameState NewState { get; set; }
+
+    public GameStateArgs(GameState newState)
+    {
+        NewState = newState;
     }
 }

@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework.Input;
 using DiceMG.Input;
 using Apos.Shapes;
 using DiceMG.Scenes;
+using MonoGameGum;
 
 namespace DiceMG;
 
@@ -37,6 +38,10 @@ public class Core : Game
     public static ShapeBatch ShapeBatch { get; private set; }
     
     public static ObjectManager GameObjManager { get; private set; }
+    
+    public static GameManager GM { get; private set;  }
+
+    public static GumService GumUI {get; private set;}
     
     public static bool ExitOnEscape { get; set; }
     
@@ -75,6 +80,11 @@ public class Core : Game
         SpriteManager = new SpriteManager(GraphicsDevice);
         ShapeBatch = new ShapeBatch(GraphicsDevice, Content);
         GameObjManager = new ObjectManager();
+        GM = new GameManager();
+        
+        //UI rendering
+        GumUI.Initialize(this, Gum.Forms.DefaultVisualsVersion.V2);
+
         
         //create instances for spritebatch and input manager
         //SpriteBatch = new SpriteBatch(GraphicsDevice);
@@ -133,6 +143,7 @@ public class Core : Game
         if (s_currentScene != null) s_currentScene.Dispose();
         GC.Collect(); 
         
+        if(s_nextScene == null) s_nextScene = new TitleScene();
         s_currentScene = s_nextScene;
         s_nextScene = null;
         
