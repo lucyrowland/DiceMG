@@ -115,19 +115,33 @@
 /processorParam:TextureFormat=Color
 /build:DPurp6.png
 
-#begin Fonts/5x.spritefont
-/importer:FontDescriptionImporter
-/processor:LocalizedFontProcessor
-/processorParam:PremultiplyAlpha=True
-/processorParam:TextureFormat=Compressed
-/build:Fonts/5x.spritefont
-
-#begin Fonts/File.spritefont
+#begin Fonts/digital18.spritefont
 /importer:FontDescriptionImporter
 /processor:FontDescriptionProcessor
 /processorParam:PremultiplyAlpha=True
 /processorParam:TextureFormat=Compressed
-/build:Fonts/File.spritefont
+/build:Fonts/digital18.spritefont
+
+#begin Fonts/digital24.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Compressed
+/build:Fonts/digital24.spritefont
+
+#begin Fonts/digital36.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Compressed
+/build:Fonts/digital36.spritefont
+
+#begin Fonts/digital88.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Compressed
+/build:Fonts/digital88.spritefont
 
 #begin tray_designs_v1.png
 /importer:TextureImporter

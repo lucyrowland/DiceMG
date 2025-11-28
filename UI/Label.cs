@@ -20,7 +20,7 @@ public class Label : UIElement
 
     public override void Draw(ShapeBatch sb, SpriteBatch spriteBatch, Rectangle screenBounds)
     {
-        if (!IsVisible || Font == null) return;
+        if (!IsVisible || Font == null || spriteBatch == null) return;
 
         var bounds = GetBounds(screenBounds);
         Vector2 pos;
@@ -36,7 +36,7 @@ public class Label : UIElement
         {
             pos = new Vector2(bounds.X, bounds.Y);
         }
-        
+    
         spriteBatch.DrawString(Font, Text, pos, TextColour);
         base.Draw(sb, spriteBatch, screenBounds);
     }

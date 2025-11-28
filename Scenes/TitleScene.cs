@@ -37,8 +37,8 @@ public class TitleScene : Scene
 
         Core.ExitOnEscape = true; 
         
-        _font = Content.Load<SpriteFont>("Fonts/File");
-        _font5x = Content.Load<SpriteFont>("Fonts/5x");
+        _font = Content.Load<SpriteFont>("Fonts/digital36");
+        _font5x = Content.Load<SpriteFont>("Fonts/digital88");
         
         _diceyTextPos = new Vector2(440, 100);
         _diceyTextSize = _font5x.MeasureString(DICEY_TEXT) * 0.5f; 

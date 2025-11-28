@@ -1,6 +1,7 @@
 using System;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
+using System.Net.Mime;
 using DiceMG.Input;
 using Apos.Shapes;
 using DiceMG; 
@@ -10,15 +11,36 @@ namespace DiceMG.UI;
 
 public class Button : Panel
 {
-    public Action OnClick { get; set; }
+    //Text
+    public string Text { get; set; } = "Button";
+    public SpriteFont Font { get; set; }
+    public Color TextColour { get; set; } = Color.White;
+    public float TextScale { get; set; } = 1f;
+    
+    //Hover Effect
     public Color HoverFillColour { get; set; } = new Color(60, 60, 60);
     public Color HoverBorderColour { get; set; } = Color.White;
-
     private bool _isHovering;
+    
+    //Sizing
+    private static float _paddingFactor = 8f;
+    public Vector2 Padding { get; set; } = new Vector2(2 * _paddingFactor, _paddingFactor); 
+    public bool AutoSize { get; set; } = true;
+    public Vector2 ButtonSize => Font.MeasureString(Text) * TextScale + Padding*2; 
+    
+    //Click Events
+    public Action OnClick { get; set; }
     private bool _wasLeftClicked;
 
     public void Update(Rectangle screenBounds)
     {
+        
+        //Auto size to fit text
+        if (AutoSize && Font != null & !string.IsNullOrEmpty(Text))
+        {
+            var textSize = Font.MeasureString(Text) * TextScale;  
+            Size = textSize + Padding * 2;
+        }
         var bounds = GetBounds(screenBounds);
         
         _isHovering = bounds.Contains(Core.Input.Mouse.Position);
@@ -26,22 +48,35 @@ public class Button : Panel
         
         if(_isHovering && _wasLeftClicked) OnClick?.Invoke();
     }
+
     public override void Draw(ShapeBatch sb, SpriteBatch spriteBatch, Rectangle screenBounds)
     {
         if (!IsVisible) return;
-        
+    
         var bounds = GetBounds(screenBounds);
         var center = bounds.Center.ToVector2();
+        var buttonStart = center - ButtonSize / 2;
         var size = new Vector2(bounds.Width, bounds.Height);
-        
+    
         var fill = _isHovering ? HoverFillColour : FillColour;
         var border = _isHovering ? HoverBorderColour : BorderColour;
+    
+        // Only draw the shape if we have a ShapeBatch
+        if (sb != null)
+            sb.DrawRectangle(buttonStart, ButtonSize, fill, border, BorderThickness, CornerRadius);
         
-        sb.DrawRectangle(center, size, fill, border, BorderThickness, CornerRadius);
+        //Draw text if centre if text and font variables exist
+        if (spriteBatch != null && Font != null && !string.IsNullOrEmpty(Text))
+        {
+            var textSize = Font.MeasureString(Text) * TextScale;  
+            var textPos = new Vector2(bounds.Center.X - textSize.X / 2, bounds.Center.Y - textSize.Y / 2);
+            
+            spriteBatch.DrawString(Font, Text, textPos, TextColour, Font.Spacing, Vector2.Zero, TextScale, SpriteEffects.None, 0f);
+        }
         
-        // Draw children (like labels)
+        // Draw children if fany
         foreach (var child in Children)
             child.Draw(sb, spriteBatch, screenBounds);
-    }    
+    } 
     
 }

@@ -81,9 +81,6 @@ public class Core : Game
         ShapeBatch = new ShapeBatch(GraphicsDevice, Content);
         GameObjManager = new ObjectManager();
         GM = new GameManager();
-        
-        //UI rendering
-        GumUI.Initialize(this, Gum.Forms.DefaultVisualsVersion.V2);
 
         
         //create instances for spritebatch and input manager

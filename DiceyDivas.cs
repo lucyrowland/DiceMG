@@ -46,8 +46,8 @@ namespace DiceMG
             
             
             base.LoadContent();
-            _font = Content.Load<SpriteFont>("Fonts/File");
-            _font5x = Content.Load<SpriteFont>("Fonts/5x");
+            _font = Content.Load<SpriteFont>("Fonts/digital36");
+            _font5x = Content.Load<SpriteFont>("Fonts/digital88");
             /*
             GameObjManager.LoadGameContent(Content);
             //Font initialization
