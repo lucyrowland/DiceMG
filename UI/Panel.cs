@@ -18,24 +18,29 @@ public class Panel : UIElement
     {
         if (!IsVisible) return; 
         
-        var bounds = GetBounds(screenBounds);
-        var centre = bounds.Center.ToVector2();
-        var size = new Vector2(bounds.Width, bounds.Height);
-        
-        if (HasFill && HasBorder)
+        // Only draw shapes if ShapeBatch is provided
+        if (sb != null)
         {
-            // Draw filled rectangle with border
-            sb.DrawRectangle(centre, size, FillColour, BorderColour, BorderThickness, CornerRadius);
-        }
-        else if (HasFill)
-        {
-            // Fill only
-            sb.FillRectangle(centre, size, FillColour, CornerRadius);
-        }
-        else if (HasBorder)
-        {
-            // Border only
-            sb.BorderRectangle(centre, size, BorderColour, BorderThickness, CornerRadius);
+            var bounds = GetBounds(screenBounds);
+            var centre = bounds.Center.ToVector2();
+            var size = new Vector2(bounds.Width, bounds.Height);
+            
+            var pos = centre - Size/2;
+            if (HasFill && HasBorder)
+            {
+                // Draw filled rectangle with border
+                sb.DrawRectangle(pos, Size, FillColour, BorderColour, BorderThickness, CornerRadius);
+            }
+            else if (HasFill)
+            {
+                // Fill only
+                sb.FillRectangle(pos, Size, FillColour, CornerRadius);
+            }
+            else if (HasBorder)
+            {
+                // Border only
+                sb.BorderRectangle(pos, Size, BorderColour, BorderThickness, CornerRadius);
+            }
         }
         
         base.Draw(sb, spriteBatch, screenBounds);

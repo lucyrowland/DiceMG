@@ -25,22 +25,44 @@ public class Button : Panel
     //Sizing
     private static float _paddingFactor = 8f;
     public Vector2 Padding { get; set; } = new Vector2(2 * _paddingFactor, _paddingFactor); 
-    public bool AutoSize { get; set; } = true;
+    //public bool AutoSize { get; set; } = true;
     public Vector2 ButtonSize => Font.MeasureString(Text) * TextScale + Padding*2; 
     
     //Click Events
     public Action OnClick { get; set; }
     private bool _wasLeftClicked;
 
+    public void AutoSize()
+    {
+        if (Font != null & !string.IsNullOrEmpty(Text)) Size = Font.MeasureString(Text) * TextScale + Padding*2;
+    }
+    public static void SpaceApart(List<Button> elements, Vector2 spacing)
+    {
+        if (elements.Count == 0) return;
+        
+        // Calculate the center point of all elements
+        Vector2 center = Vector2.Zero;
+        foreach (var elem in elements)
+        {
+            center += elem.Offset;
+        }
+        center /= elements.Count;
+        
+        // Move each element away from the center
+        foreach (var elem in elements)
+        {
+            Vector2 direction = elem.Offset - center;
+            if (direction != Vector2.Zero)
+            {
+                direction.Normalize();
+                elem.Offset += direction * spacing;
+            }
+        }
+    }
+
     public void Update(Rectangle screenBounds)
     {
-        
-        //Auto size to fit text
-        if (AutoSize && Font != null & !string.IsNullOrEmpty(Text))
-        {
-            var textSize = Font.MeasureString(Text) * TextScale;  
-            Size = textSize + Padding * 2;
-        }
+
         var bounds = GetBounds(screenBounds);
         
         _isHovering = bounds.Contains(Core.Input.Mouse.Position);
@@ -54,16 +76,23 @@ public class Button : Panel
         if (!IsVisible) return;
     
         var bounds = GetBounds(screenBounds);
-        var center = bounds.Center.ToVector2();
-        var buttonStart = center - ButtonSize / 2;
-        var size = new Vector2(bounds.Width, bounds.Height);
-    
         var fill = _isHovering ? HoverFillColour : FillColour;
         var border = _isHovering ? HoverBorderColour : BorderColour;
     
         // Only draw the shape if we have a ShapeBatch
-        if (sb != null)
-            sb.DrawRectangle(buttonStart, ButtonSize, fill, border, BorderThickness, CornerRadius);
+        if (sb != null && (HasFill || HasBorder))
+        {
+            var centre = bounds.Center.ToVector2();
+            //Size = new Vector2(bounds.Width, bounds.Height) + Padding*2;
+            var pos = centre - Size/2;
+            
+            if (HasFill && HasBorder)
+                sb.DrawRectangle(pos, Size, fill, border, BorderThickness, CornerRadius);
+            else if (HasFill)
+                sb.FillRectangle(pos, Size, fill, CornerRadius);
+            else if (HasBorder)
+                sb.BorderRectangle(pos, Size, border, BorderThickness, CornerRadius);
+        }
         
         //Draw text if centre if text and font variables exist
         if (spriteBatch != null && Font != null && !string.IsNullOrEmpty(Text))

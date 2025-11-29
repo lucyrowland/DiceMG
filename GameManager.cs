@@ -24,7 +24,7 @@ public enum TurnProcedure { Player1, Player2 }
 public class GameManager
 {
     public static Dictionary<int, int> Scores = new Dictionary<int, int>();
-    public static Dictionary<int, Player> Players = new Dictionary<int, Player>();
+    public List<Player> Players = new List<Player>();
     public static int Round; 
     public static GameState State;
     public static TurnProcedure CurrentTurn;
@@ -47,7 +47,7 @@ public class GameManager
          for (int i = 0; i < numPlayers; i++)
          {
              var player_name = $"Player {i + 1}";
-             Players.Add(i+1, new Player(player_name, i+1));
+             //Players.Add(i+1, new Player(player_name, i+1));
              Scores.Add(i+1, 0);
              Debug.WriteLine($"Player {i+1} added");
          }
@@ -59,18 +59,7 @@ public class GameManager
 
     public GameManager()
     {
-        Multiplayer = false;
-        CurrentTurn = TurnProcedure.Player1;
-        NumPlayers = 1;
-        Round = 1; 
-        ChangeState(GameState.NewGame);
-        Players.Add(1, new Player("Player 1", 1));
-        Scores.Add(1, 0);
-        Debug.WriteLine($"Player 1 added");
-        
-        GenerateLevels();
-        Level = "Short"; 
-        CurrentLevelScore = LevelScores[Level];
+
     }
     public void ChangeState(GameState newState)
     {

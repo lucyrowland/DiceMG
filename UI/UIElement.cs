@@ -27,47 +27,86 @@ public class UIElement
         child.Parent = this; 
         Children.Add(child);
     }
+    public void RemoveChild(UIElement child) => Children.Remove(child);
+    public void ClearChildren() => Children.Clear();
 
+    
+    public void SetParent(UIElement parent) => Parent = parent;
+    public void MatchParentSize() => Size = Parent.Size;
+    public void MatchParentWidth() => Size = new Vector2(Parent.Size.X, Size.Y);
+    public void MatchParentHeight() => Size = new Vector2(Size.X, Parent.Size.Y);
+    public void MatchPosition(UIElement elem) => Offset = elem.Offset;
+    public void MatchSize(UIElement elem) => Size = elem.Size;
+    public void MatchBottom(UIElement elem) => Offset = new Vector2(Offset.X, elem.Offset.Y - Size.Y);
+    public void MatchWidth(UIElement elem) => Size = new Vector2(elem.Size.X, Size.Y);
+    public void MatchHeight(UIElement elem) => Size = new Vector2(Size.X, elem.Size.Y);
+
+    // Get the actual screen bounds for this element
     public Rectangle GetBounds(Rectangle screenBounds)
     {
         Rectangle parentBounds = Parent?.GetBounds(screenBounds) ?? screenBounds;
-        Vector2 anchorPos = GetAnchorPoint(parentBounds);
-        Vector2 origin = GetOrigin(); 
+        Vector2 anchorPos = GetAnchorPoint(parentBounds, Anchor);
+        Vector2 origin = GetOriginOffset(Anchor, Size);
         Vector2 finalPos = anchorPos + Offset - origin;
         
         return new Rectangle((int)finalPos.X, (int)finalPos.Y, (int)Size.X, (int)Size.Y);
     }
 
-    private Vector2 GetAnchorPoint(Rectangle parent)
+    public static void SpaceApart(List<UIElement> elements, Vector2 spacing)
     {
-        float x = Anchor switch
+        if (elements.Count == 0) return;
+        
+        // Calculate the center point of all elements
+        Vector2 center = Vector2.Zero;
+        foreach (var elem in elements)
         {
-            Anchor.TopLeft or Anchor.MiddleLeft or Anchor.BottomLeft => parent.Left,
-            Anchor.TopCentre or Anchor.MiddleCentre or Anchor.BottomCentre => parent.Center.X,
-            _ => parent.Right
+            center += elem.Offset;
+        }
+        center /= elements.Count;
+        
+        // Move each element away from the center
+        foreach (var elem in elements)
+        {
+            Vector2 direction = elem.Offset - center;
+            if (direction != Vector2.Zero)
+            {
+                direction.Normalize();
+                elem.Offset += direction * spacing;
+            }
+        }
+    }
+
+    //static helper can be used to get the anchor point for a given rectangle
+    public static Vector2 GetAnchorPoint(Rectangle bounds, Anchor anchor)
+    {
+        float x = anchor switch
+        {
+            Anchor.TopLeft or Anchor.MiddleLeft or Anchor.BottomLeft => bounds.Left,
+            Anchor.TopCentre or Anchor.MiddleCentre or Anchor.BottomCentre => bounds.Center.X,
+            _ => bounds.Right
         };
-        float y = Anchor switch
+        float y = anchor switch
         {
-            Anchor.TopLeft or Anchor.TopCentre or Anchor.TopRight => parent.Top,
-            Anchor.MiddleLeft or Anchor.MiddleCentre or Anchor.MiddleRight => parent.Center.Y,
-            _ => parent.Bottom
+            Anchor.TopLeft or Anchor.TopCentre or Anchor.TopRight => bounds.Top,
+            Anchor.MiddleLeft or Anchor.MiddleCentre or Anchor.MiddleRight => bounds.Center.Y,
+            _ => bounds.Bottom
         };
         return new Vector2(x, y);
     }
-
-    private Vector2 GetOrigin()
+    // Static helper - returns the offset from anchor point based on size
+    public static Vector2 GetOriginOffset(Anchor anchor, Vector2 size)
     {
-        float x = Anchor switch
+        float x = anchor switch
         {
             Anchor.TopLeft or Anchor.MiddleLeft or Anchor.BottomLeft => 0,
-            Anchor.TopCentre or Anchor.MiddleCentre or Anchor.BottomCentre => Size.X / 2,
-            _ => Size.X
+            Anchor.TopCentre or Anchor.MiddleCentre or Anchor.BottomCentre => size.X / 2,
+            _ => size.X
         };
-        float y = Anchor switch
+        float y = anchor switch
         {
             Anchor.TopLeft or Anchor.TopCentre or Anchor.TopRight => 0,
-            Anchor.MiddleLeft or Anchor.MiddleCentre or Anchor.MiddleRight => Size.Y / 2,
-            _ => Size.Y
+            Anchor.MiddleLeft or Anchor.MiddleCentre or Anchor.MiddleRight => size.Y / 2,
+            _ => size.Y
         };
         
         return new Vector2(x, y);

@@ -8,6 +8,8 @@ using DiceMG.Input;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Content;
 using DiceMG.Input;
+using DiceMG.Scenes;
+using DiceMG.UI;
 
 
 namespace DiceMG;
@@ -30,6 +32,14 @@ public class GameObject
     public ObjType Type { get; set; }
     public float Mass = 1f;
     public Vector2 Velocity = Vector2.Zero;
+    public float AngularVelocity { get; set; } = 0f; 
+    
+    // Center point of the object (middle of the rectangle)
+    public Vector2 Centre => new Vector2(Position.X + Width / 2, Position.Y + Height / 2);
+    // Radius for circle collision (average of width/height divided by 2)
+    // For a square dice (Width = Height = 40), Radius = 20
+    public float Radius => (Width + Height) / 4f;
+
     public string TextureKey { get; set; }
     public float Rotation { get; set; } = 0f; 
     public Vector2 Acceleration = Vector2.Zero;
@@ -126,16 +136,88 @@ public class ObjPhysics
             }
         }
     }
-
-    public void CheckTrayBounds(Dice obj, RollingTray tray)
+        public void CircleCollision(Dice obj1, Dice obj2)
     {
-        float restitution = 0.95f; // Bounciness (0 = no bounce, 1 = perfect bounce)
-        float tray_padding = Global.TRAY_PADDING;
+        // Get centers and radii
+        Vector2 center1 = obj1.Centre;
+        Vector2 center2 = obj2.Centre;
+        float radius1 = obj1.Radius;
+        float radius2 = obj2.Radius;
         
-        var leftbound = tray.Position.X+tray_padding;
-        var rightbound = tray.Position.X + tray.Width-tray_padding;
-        var topbound = tray.Position.Y+tray_padding;
-        var bottombound = tray.Position.Y + tray.Height-tray_padding;
+        // Calculate distance between centers
+        Vector2 delta = center2 - center1;
+        float distance = delta.Length();
+        float minDistance = radius1 + radius2;
+        
+        // Check if circles are colliding
+        if (distance < minDistance && distance > 0)
+        {
+            // Collision normal (direction from obj1 to obj2)
+            Vector2 normal = delta / distance;
+            
+            // Calculate relative velocity
+            Vector2 relativeVelocity = obj2.Velocity - obj1.Velocity;
+            float velocityAlongNormal = Vector2.Dot(relativeVelocity, normal);
+            
+            // Don't resolve if objects are moving apart
+            if (velocityAlongNormal > 0)
+                return;
+            
+            // Restitution (bounciness)
+            float restitution = 0.85f;
+            
+            // Calculate impulse scalar
+            float impulseScalar = -(1 + restitution) * velocityAlongNormal;
+            impulseScalar /= (1 / obj1.Mass + 1 / obj2.Mass);
+            
+            // Apply impulse
+            Vector2 impulse = impulseScalar * normal;
+            obj1.Velocity -= impulse / obj1.Mass;
+            obj2.Velocity += impulse / obj2.Mass;
+            
+            // === ROTATION PHYSICS ===
+            // Calculate perpendicular component for rotation
+            Vector2 tangent = new Vector2(-normal.Y, normal.X); // Perpendicular to normal
+            float relativeVelocityTangent = Vector2.Dot(relativeVelocity, tangent);
+            
+            // Apply angular velocity based on tangential velocity
+            float rotationFactor = 0.1f; // How much collision affects rotation
+            obj1.AngularVelocity += relativeVelocityTangent * rotationFactor / radius1;
+            obj2.AngularVelocity -= relativeVelocityTangent * rotationFactor / radius2;
+            
+            // Also add rotation based on linear velocity
+            float velocityMagnitude1 = obj1.Velocity.Length();
+            float velocityMagnitude2 = obj2.Velocity.Length();
+            
+            if (velocityMagnitude1 > 0.1f)
+            {
+                obj1.AngularVelocity += velocityMagnitude1 * 0.02f * Math.Sign(Vector2.Dot(obj1.Velocity, tangent));
+            }
+            
+            if (velocityMagnitude2 > 0.1f)
+            {
+                obj2.AngularVelocity += velocityMagnitude2 * 0.02f * Math.Sign(Vector2.Dot(obj2.Velocity, tangent));
+            }
+            
+            // === SEPARATE OVERLAPPING OBJECTS ===
+            float overlap = minDistance - distance;
+            Vector2 separation = normal * (overlap / 2);
+            
+            obj1.Position -= separation;
+            obj2.Position += separation;
+        }
+    }
+
+    public void CheckTrayBounds(Dice obj, Panel tray)
+    {
+        float restitution = 0.99f; // Bounciness (0 = no bounce, 1 = perfect bounce)
+        float tray_padding = Global.TRAY_PADDING;
+        var bounds = tray.GetBounds(Core.GraphicsDevice.Viewport.Bounds);
+        
+        var leftbound = bounds.X+tray_padding;
+        var rightbound = bounds.X + bounds.Width-tray_padding;
+        var topbound = bounds.Y+tray_padding;
+        var bottombound = bounds.Y + bounds.Height-tray_padding;
         
         // Left edge
         if (obj.Position.X < leftbound)
@@ -206,12 +288,17 @@ public class ObjectManager
     public Dictionary<string, GameObject> ObjDict = new Dictionary<string, GameObject>();
     public List<GameObject> ObjList = new List<GameObject>(); 
     bool _spaceReleased = false;
-    private List<Dice> _activeDice => ObjList.OfType<Dice>()
+    public List<Dice> _activeDice => ObjList.OfType<Dice>()
         .Where(d => d.State != DieState.played)
         .ToList();
     public List<int> ActiveDiceValues => _activeDice.Select(d => d.Value).ToList();
     private List<Dice> _heldDice => ObjList.OfType<Dice>().Where(d => d.State == DieState.held).ToList();
     public void BirthObject(GameObject obj) => ObjList.Add(obj);
+    public void BirthObject(GameObject obj, string key)
+    {
+        ObjDict.Add(key, obj);
+        ObjList.Add(obj);  // ✓ Also add to list!
+    }
     public void KillObject(GameObject obj) => ObjList.Remove(obj);
     
     public void DictAdd(string key, GameObject obj) => ObjDict.Add(key, obj);
@@ -226,7 +313,6 @@ public class ObjectManager
             ObjDict.Remove(key);
         }
     }
-    public RollingTray Tray => ObjList.OfType<RollingTray>().FirstOrDefault();
 
     public void ResetRound(int number_of_dice = 6)
     {
@@ -304,8 +390,6 @@ public class ObjectManager
         // Update all dice movement every frame
         foreach (Dice die in _activeDice)
         {
-            Physics.CheckScreenBounds(die, Global.ScreenWidth, Global.ScreenHeight);
-            Physics.CheckTrayBounds(die, Tray);
 
             if (die.State == DieState.rolling)
             {
