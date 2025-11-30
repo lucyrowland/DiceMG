@@ -33,9 +33,35 @@ public class UIElement
     
     public void SetParent(UIElement parent) => Parent = parent;
     public void MatchParentSize() => Size = Parent.Size;
+
+    public void MatchParentPosition()
+    {
+        if (Parent.Anchor == this.Anchor)
+        {
+            Offset = Parent.Offset;
+        }
+        else
+        {
+            Offset = Parent.Offset - GetOriginOffset(Parent.Anchor, Parent.Size);
+        }
+    }
+    public void MatchPosition(UIElement elem)
+    {
+        if (elem.Anchor == this.Anchor)
+        {
+            Offset = elem.Offset;
+        }
+        else
+        {
+            Offset = elem.Offset - GetOriginOffset(elem.Anchor, elem.Size);
+        }
+    }
+    
+    public void AddToOffset(Vector2 offset) => Offset += offset;
     public void MatchParentWidth() => Size = new Vector2(Parent.Size.X, Size.Y);
     public void MatchParentHeight() => Size = new Vector2(Size.X, Parent.Size.Y);
-    public void MatchPosition(UIElement elem) => Offset = elem.Offset;
+    public void MatchX(UIElement elem) => Offset = new Vector2(elem.Offset.X, Offset.Y);
+    public void MatchY(UIElement elem) => Offset = new Vector2(Offset.X, elem.Offset.Y);
     public void MatchSize(UIElement elem) => Size = elem.Size;
     public void MatchBottom(UIElement elem) => Offset = new Vector2(Offset.X, elem.Offset.Y - Size.Y);
     public void MatchWidth(UIElement elem) => Size = new Vector2(elem.Size.X, Size.Y);

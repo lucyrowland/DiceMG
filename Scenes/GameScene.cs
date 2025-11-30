@@ -10,6 +10,7 @@ using Apos.Shapes;
 using DiceMG.UI; 
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace DiceMG.Scenes;
 
@@ -19,6 +20,7 @@ public class GameScene : Scene
     
     private List<UIElement> _ui = new();
     private List<Button> _buttons = new();
+    private List<Label> _labels = new(); 
     private SpriteBatch _spriteBatch = Core.SpriteBatch;
     private ShapeBatch _shapeBatch = Core.ShapeBatch;
     private ObjectManager ObjManager = new ObjectManager();
@@ -127,9 +129,32 @@ public class GameScene : Scene
             BorderThickness = 2f,
         };
         
-        //rollingTray.MatchBottom(passButton);
+        // === SCORE AND SCORED HAND BUTTONS ===
+        var p1ScoreDisplay = new Panel
+        {
+            Anchor = Anchor.TopLeft,
+            Size = new Vector2(300, 50),
+            Offset = new Vector2(0, -60),
+            FillColour = new Color(100, 100, 100),
+            BorderColour = Color.White,
+            BorderThickness = 2f,
+            CornerRadius = 10f,
+        };
+        p1tray.AddChild(p1ScoreDisplay);
+        var p1ScoreDisplayText = new Label
+        {
+            Anchor = Anchor.MiddleLeft,
+            Offset = new Vector2(50, 0),
+            Text = "Held Dice: 2000",
+            Font = Core.Content.Load<SpriteFont>("Fonts/digital18"),
+            TextColour = Color.White,
+        };
+        p1ScoreDisplay.AddChild(p1ScoreDisplayText);
+        
+        _ui.Add(p1ScoreDisplay);
         _ui.Add(p1tray);
         _ui.Add(p2tray);
+        
         PlayerOne.Tray = p1tray;
         PlayerTwo.Tray = p2tray;
         

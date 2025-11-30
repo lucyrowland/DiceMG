@@ -14,7 +14,7 @@ namespace DiceMG.UI;
 public class Label : UIElement
 {
     public string Text { get; set; } = "";
-    public SpriteFont Font { get; set; } = Core.Content.Load<SpriteFont>("Fonts/File"); //basic font for game
+    public SpriteFont Font { get; set; } 
     public Color TextColour { get; set; } = Color.White;
     public bool CentreText { get; set; } = true;
 
