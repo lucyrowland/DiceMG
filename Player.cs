@@ -3,6 +3,8 @@ using Microsoft.Xna.Framework;
 using Apos.Shapes;
 using DiceMG.UI;
 using System.Linq;
+using DiceMG.Input;
+using System;
 
 namespace DiceMG;
 
@@ -14,26 +16,39 @@ public class Player
     public Dictionary<Dice, string> DiceSet;
     public List<Dice> DiceList;
     public List<Dice> ActiveDice => DiceList.Where(d => d.State != DieState.played).ToList();
-    public int Score;
+    public List<Dice> HeldDice => DiceList.Where(d => d.State == DieState.held).ToList();
+
+    public Score Scores;
+    
 
     public float _trayx;
     public float _trayy;
     public Vector2 _traysize; 
     
     public int PNumber;
+    
+    //for click and drag func
+    private Dice _diceInDrag; 
+    private Vector2 _dragOffset = Vector2.Zero;
 
     public Player()
     {
         DiceSet = new Dictionary<Dice, string>();
         DiceList = new List<Dice>();
+        Scores = new Score();
     }
 
+    public int HandScore => Scores.PossibleScore(HeldDice) ? HeldDice.Sum(d => d.Value) : 0;
+    public string HandScoreText => HandScore.ToString();
+    public int RoundScore => Scores.GetRoundScore(); 
+    public string RoundScoreText => RoundScore.ToString();
     public Player(string name, int p_num)
     {
         Name = name;
         DiceSet = new Dictionary<Dice, string>();
         DiceList = new List<Dice>();
         PNumber = p_num;
+        Scores = new Score();
     }
 
     public void AddDice(Dice d, string dNum)
@@ -55,6 +70,14 @@ public class Player
                 (float)(vel_x), 
                 (float)(vel_y) 
             );
+        }
+    }
+
+    public void StopDice()
+    {
+        foreach (Dice d in ActiveDice)
+        {
+            d.Velocity = Vector2.Zero;
         }
     }
 
@@ -94,7 +117,50 @@ public class Player
                     die.State = DieState.free;
                 }
             }
+            
+        }
+        
+        HandleDiceClick(ActiveDice);
+    }
+    public void HandleDiceClick(List<Dice> dice)
+    {
+        var mousePos = Core.Input.Mouse.Position.ToVector2();
+    
+        // Start dragging
+        if (Core.Input.Mouse.ButtonPressed(MouseButton.Left))
+        {
+            foreach (var die in dice)
+            {
+                if (die.Box.Contains(Core.Input.Mouse.Position))
+                {
+                    _diceInDrag = die;
+                    _dragOffset = die.Position - mousePos;
+                    break; // Only drag one die at a time
+                }
+            }
+        }
+    
+        // During drag
+        if (_diceInDrag != null && Core.Input.Mouse.IsButtonDown(MouseButton.Left))
+        {
+            _diceInDrag.Position = mousePos + _dragOffset;
+            _diceInDrag.Velocity = Vector2.Zero; // Stop physics
+            
+            //rotate the die with the scroll wheel 
+            if (Core.Input.Mouse.ScrollWheelDelta != 0)
+            {
+                float rotationSpeed = 0.05f;
+                _diceInDrag.Rotation += rotationSpeed * Core.Input.Mouse.ScrollWheelDelta;
+            }
+            
+        }
+    
+        // End drag
+        if (_diceInDrag != null && Core.Input.Mouse.ButtonReleased(MouseButton.Left))
+        {
+            _diceInDrag = null;
         }
     }
+
 
 }

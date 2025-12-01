@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System;
 using System.Diagnostics;
 using Microsoft.Xna.Framework;
+using DiceMG.Input;
 
 namespace DiceMG;
 
@@ -16,45 +17,24 @@ public enum GameState
     Rules,
     GameWon
 }
-
+public enum ScoreType {Total, Round, Hand}
 
 
 public enum TurnProcedure { Player1, Player2 }
 
 public class GameManager
 {
-    public static Dictionary<int, int> Scores = new Dictionary<int, int>();
-    public List<Player> Players = new List<Player>();
-    public static int Round; 
-    public static GameState State;
-    public static TurnProcedure CurrentTurn;
-    public static int NumPlayers = 1;
-    public Dictionary<string, int> LevelScores = new Dictionary<string, int>();
-    public static string Level = "Short";
-    public static int CurrentLevelScore;
-    public static Player Winner = null;
-    public static bool Multiplayer;
-    public EventHandler<GameStateArgs> StateChangedHandler;
     
-    public GameManager(int numPlayers, string level)
-    {
-        Multiplayer = true;
-         CurrentTurn = TurnProcedure.Player1;
-         NumPlayers = numPlayers;
-         Round = 1; 
-         ChangeState(GameState.NewGame);
+    public List<Player> Players = new List<Player>();
+    //public static GameState State;
+    //public static TurnProcedure CurrentTurn;
+    public EventHandler<GameStateArgs> StateChangedHandler; 
+    
 
-         for (int i = 0; i < numPlayers; i++)
-         {
-             var player_name = $"Player {i + 1}";
-             //Players.Add(i+1, new Player(player_name, i+1));
-             Scores.Add(i+1, 0);
-             Debug.WriteLine($"Player {i+1} added");
-         }
-         
-         GenerateLevels();
-         Level = level; 
-         CurrentLevelScore = LevelScores[level];
+    public GameManager(List<Player> players)
+    {
+        Players = players; 
+        
     }
 
     public GameManager()
@@ -63,67 +43,61 @@ public class GameManager
     }
     public void ChangeState(GameState newState)
     {
-        State = newState;
+        //State = newState;
         StateChangedHandler?.Invoke(this, new GameStateArgs(newState));
     }
+    public void AddRoundScore(Player player) => player.Scores.AddToRoundScore(player.HeldDice);
+    public void AddTotalScore(Player player) => player.Scores.AddToTotalScore();
 
-    public void GenerateLevels()
+    public string ScoreText(Player player, ScoreType type)
     {
-        LevelScores.Add("Short", 1000);
-        LevelScores.Add("Medium", 2000);
-        LevelScores.Add("Long", 3000);
+            
+            
+        if (type == ScoreType.Total) return $"{player.Scores.TotalScore}";
+        if (type == ScoreType.Round) return $"{player.Scores.RoundScore}";
+
+        return $"{player.Scores.GetTempScore(player.DiceList)}";
+
     }
+
+
 
     public void NextRound()
     {
-        ChangeTurn();
-        if (CurrentTurn == TurnProcedure.Player1) Round++;
-        ScoringSystem.AddScore();
     }
 
     public void SkipTurn()
     {
-        ChangeTurn();
-        if (CurrentTurn == TurnProcedure.Player1) Round++;
-        //ScoringSystem.NewRound();
-        ScoringSystem.AddScore(); //need to add temp score and round score to scoring system
     }
 
     public void FlopTurn()
     {
-        ChangeTurn();
-        if (CurrentTurn == TurnProcedure.Player1) Round++;
-        //ScoringSystem.NewRound(); to reset tempscore and roundscore to 0 
     }
-    
-    public static void ChangeTurn()
+    public void Update(GameTime gameTime)
     {
-        if (!Multiplayer)
-            return;
-        if (CurrentTurn == TurnProcedure.Player1)
-            CurrentTurn = TurnProcedure.Player2;
-        else
-            CurrentTurn = TurnProcedure.Player1;
-
-    }
-
-    public void GameWonCheck()
-    {
-        foreach (var score in Scores)
+        foreach (Player player in Players)
         {
-            if (score.Value >= CurrentLevelScore)
-            {
-                ChangeState(GameState.GameWon);
-                Winner = Players[score.Key];
-                return;
-            }
+            foreach(Dice die in player.DiceList) 
+                ClickedDice(die);
+            
         }
+           
     }
 
-    public void NewGame()
+    private void ClickedDice(Dice die)
     {
-        ChangeState(GameState.NewGame);
-        ScoringSystem.Reset();
+        if (Core.Input.Mouse.ButtonPressed(MouseButton.Left))
+        {
+                
+            if (die.Box.Contains(Core.Input.Mouse.Position))
+            {
+                if (die.State != DieState.held)
+                    die.State = DieState.held;
+                else
+                    die.State = DieState.free;
+            }
+            Console.WriteLine($"Die Value: {die.Value}, Die State: {die.State}");
+        }
     }
     
 }

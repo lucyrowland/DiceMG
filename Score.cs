@@ -8,13 +8,16 @@ using System.Diagnostics.Contracts;
 
 namespace DiceMG;
 
-public class ScoringSystem
+public class Score
 {
+    public List<Dice> DiceSet; 
     public static Dictionary<List<int>, int> ScoreReference;
     public static Dictionary<int, int> ExtraDiceScore;
-    public static int TotalScore = 0; 
     
-    public ScoringSystem()
+    public int TotalScore = 0; 
+    public int RoundScore = 0;
+    
+    public Score()
     {
         ScoreReference = new Dictionary<List<int>, int>();
         ScoreReference.Add([1,1,1],1000);
@@ -38,55 +41,68 @@ public class ScoringSystem
         ExtraDiceScore.Add(6,600);
     }
     
-    private static bool ListsEqual(List<int> a, List<int> b)
-    {
-        if (a.Count != b.Count) return false;
-        for (int i = 0; i < a.Count; i++)
-        {
-            if (a[i] != b[i]) return false;
-        }
-        return true;
-    }
+
+    public static List<int> AllDiceValues(List<Dice> dice) => dice.Select(d => d.Value).ToList();
+    public static List<int> HeldDiceValues(List<Dice> dice) => dice.Where(d => d.State == DieState.held).Select(d => d.Value).ToList();
     
-    public static void Reset()
+    
+    public void ResetGame()
     {
         TotalScore = 0;
+        RoundScore = 0;
+    }
+    public void ResetRound()
+    {
+        RoundScore = 0;
     }
 
-    public static void AddScore()
+    public void AddToRoundScore(List<Dice> PlayerDiceSet)
     {
-        TotalScore += GetTempScore(); 
+        RoundScore += GetTempScore(PlayerDiceSet); 
     }
 
-    public static int GetTotalScore()
+    public void AddToTotalScore()
     {
-        return TotalScore;
+        RoundScore += TotalScore;
+        ResetRound();
     }
+    public int GetRoundScore() => RoundScore;
+
+    public int GetTotalScore() => TotalScore;
 
     private bool ContainsAll(List<int> list, params int[] values)
     {
         return values.All(v => list.Contains(v));
     }
 
-    public bool PossibleScore()
+    public bool PossibleScore(List<Dice> PlayerDiceSet)
     {
-        var activeDiceVals = Core.GameObjManager.ObjList.OfType<Dice>().Select(d => d.Value).OrderBy(d => d).ToList();
-        if (activeDiceVals.Contains(1) || activeDiceVals.Contains(5)) return true;
-        if (ShowScore(activeDiceVals) > 0) return true; 
-        if (activeDiceVals.GroupBy(x => x).Any(g => g.Count() >= 3)) return true;
-        if (activeDiceVals.Count == 6 && (ContainsAll(activeDiceVals, 1, 2, 3, 4, 5) || ContainsAll(activeDiceVals, 2, 3, 4, 5, 6))) return true;
+        var _heldDiceVals = HeldDiceValues(PlayerDiceSet);
+        if (_heldDiceVals.Contains(1) || _heldDiceVals.Contains(5)) return true;
+        if (ShowScore(_heldDiceVals) > 0) return true; 
+        if (_heldDiceVals.GroupBy(x => x).Any(g => g.Count() >= 3)) return true;
+        if (_heldDiceVals.Count == 6 && (ContainsAll(_heldDiceVals, 1, 2, 3, 4, 5) || ContainsAll(_heldDiceVals, 2, 3, 4, 5, 6))) return true;
             
         return false;
     }
 
-    public static int GetTempScore()
+    public int GetTempScore(List<Dice> PlayerDiceSet)
     {
-        var helddice = Core.GameObjManager.ObjList.OfType<Dice>().Where(d => d.State == DieState.held).Select(d => d.Value).ToList();
-        return ShowScore(helddice);
+        return ShowScore(HeldDiceValues(PlayerDiceSet));
     }
     
+    // ===================== showing score equations - dont fuck with this ============================ //
     public static int ShowScore(List<int> dice)
     {
+        static bool ListsEqual(List<int> a, List<int> b)
+        {
+            if (a.Count != b.Count) return false;
+            for (int i = 0; i < a.Count; i++)
+            {
+                if (a[i] != b[i]) return false;
+            }
+            return true;
+        }
         int score = 0;
         
         // Sort the dice for consistent comparison
@@ -133,4 +149,5 @@ public class ScoringSystem
         
         return score;
     }
+    // ===================== end of dont fuck with zone ============================ //
 }

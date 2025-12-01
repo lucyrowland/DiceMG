@@ -25,12 +25,20 @@ public class GameScene : Scene
     private ShapeBatch _shapeBatch = Core.ShapeBatch;
     private ObjectManager ObjManager = new ObjectManager();
     private ObjPhysics Physics = new ObjPhysics();
-    public GameManager GM = Core.GM; 
+    public GameManager GM = new GameManager();
     
     private int numberOfDice = 6;
 
     public Player PlayerOne;
     public Player PlayerTwo;
+    
+    public Panel p1tray;
+    public Panel p2tray;
+
+    public Label p1HandScoreText;
+    public Label p1RoundScoreText;
+    public Label p2HandScoreText;
+    public Label p2RoundScoreText;
     
     public override void Initialize()
     {
@@ -91,7 +99,7 @@ public class GameScene : Scene
             FillColour = new Color(50, 50, 50),
             BorderColour = Color.Gray,
             CornerRadius = 6f,
-            OnClick = () => Console.WriteLine("Hand locked")
+            OnClick = () => GM.AddRoundScore(PlayerOne)
         };
         lockButton.AutoSize();
         
@@ -108,7 +116,7 @@ public class GameScene : Scene
         Button.SpaceApart(_buttons, new Vector2 (0, 4));
         
         // === ROLLING TRAYS 
-        var p1tray = new Panel
+        p1tray = new Panel
         {
             Anchor = Anchor.MiddleCentre,
             Size = new Vector2(300, 340),
@@ -117,9 +125,10 @@ public class GameScene : Scene
             BorderColour = Color.Gray,
             BorderThickness = 2f,
             CornerRadius = 10f,
+            OnClick = () => PlayerOne.StopDice()
         };
 
-        var p2tray = new Panel
+        p2tray = new Panel
         {
             Anchor = Anchor.MiddleCentre,
             Size = new Vector2(300, 340),
@@ -127,31 +136,94 @@ public class GameScene : Scene
             FillColour = new Color(100, 100, 100),
             BorderColour = Color.Gray,
             BorderThickness = 2f,
+            OnClick = () => PlayerTwo.StopDice()
         };
         
-        // === SCORE AND SCORED HAND BUTTONS ===
-        var p1ScoreDisplay = new Panel
+        // === ROUND SCORE AND SCORED HAND BUTTONS ===
+        var p1HandScoreBubble = new Panel
         {
             Anchor = Anchor.TopLeft,
-            Size = new Vector2(300, 50),
+            Size = new Vector2(144, 50),
             Offset = new Vector2(0, -60),
-            FillColour = new Color(100, 100, 100),
+            FillColour = Color.Red,
             BorderColour = Color.White,
             BorderThickness = 2f,
             CornerRadius = 10f,
         };
-        p1tray.AddChild(p1ScoreDisplay);
-        var p1ScoreDisplayText = new Label
+        p1tray.AddChild(p1HandScoreBubble);
+         p1HandScoreText = new Label
         {
-            Anchor = Anchor.MiddleLeft,
-            Offset = new Vector2(50, 0),
-            Text = "Held Dice: 2000",
-            Font = Core.Content.Load<SpriteFont>("Fonts/digital18"),
+            Anchor = Anchor.MiddleCentre,
+            Offset = new Vector2(0, 4),
+            Text = GM.ScoreText(PlayerOne, ScoreType.Hand),
+            Font = Core.Content.Load<SpriteFont>("Fonts/digital36"),
             TextColour = Color.White,
         };
-        p1ScoreDisplay.AddChild(p1ScoreDisplayText);
+        p1HandScoreBubble.AddChild(p1HandScoreText);
+        var p1RoundScoreBubble = new Panel
+        {
+            Anchor = Anchor.TopLeft,
+            Size = new Vector2(144, 50),
+            Offset = new Vector2(150,0),
+            FillColour = Color.Blue,
+            BorderColour = Color.White,
+            BorderThickness = 2f,
+            CornerRadius = 10f,
+        };
+        p1HandScoreBubble.AddChild(p1RoundScoreBubble);
+        p1RoundScoreText = new Label
+        {
+            Anchor = Anchor.MiddleCentre,
+            Offset = new Vector2(0, 4),
+            Text = PlayerOne.RoundScoreText,
+            Font = Core.Content.Load<SpriteFont>("Fonts/digital36"),
+            TextColour = Color.White,
+        };
+        p1RoundScoreBubble.AddChild(p1RoundScoreText);
+
         
-        _ui.Add(p1ScoreDisplay);
+        //PlAYER 2
+        var p2HandScoreBubble = new Panel
+        {
+            Anchor = Anchor.TopLeft,
+            Size = new Vector2(144, 50),
+            Offset = new Vector2(0, -60),
+            FillColour = Color.Red,
+            BorderColour = Color.White,
+            BorderThickness = 2f,
+            CornerRadius = 10f,
+        };
+        p2tray.AddChild(p2HandScoreBubble);
+        p2HandScoreText = new Label
+        {
+            Anchor = Anchor.MiddleCentre,
+            Offset = new Vector2(0, 4),
+            Text = PlayerOne.HandScoreText,
+            Font = Core.Content.Load<SpriteFont>("Fonts/digital36"),
+            TextColour = Color.White,
+        };
+        p2HandScoreBubble.AddChild(p2HandScoreText);
+        var p2RoundScoreBubble = new Panel
+        {
+            Anchor = Anchor.TopLeft,
+            Size = new Vector2(144, 50),
+            Offset = new Vector2(150,0),
+            FillColour = Color.Blue,
+            BorderColour = Color.White,
+            BorderThickness = 2f,
+            CornerRadius = 10f,
+        };
+        p2HandScoreBubble.AddChild(p2RoundScoreBubble);
+        p2RoundScoreText = new Label
+        {
+            Anchor = Anchor.MiddleCentre,
+            Offset = new Vector2(0, 4),
+            Text = PlayerTwo.RoundScoreText,
+            Font = Core.Content.Load<SpriteFont>("Fonts/digital36"),
+            TextColour = Color.White,
+        };
+        p2RoundScoreBubble.AddChild(p2RoundScoreText);
+        
         _ui.Add(p1tray);
         _ui.Add(p2tray);
         
@@ -204,6 +276,15 @@ public class GameScene : Scene
         
         foreach (var btn in _buttons)
             btn.Update(screen);
+
+        p1tray.Update(screen); 
+        p2tray.Update(screen);
+        GM.Update(gameTime);
+        
+        p1HandScoreText.Text = GM.ScoreText(PlayerOne, ScoreType.Hand);
+        p1RoundScoreText.Text = GM.ScoreText(PlayerOne, ScoreType.Round);
+        p2HandScoreText.Text = GM.ScoreText(PlayerTwo, ScoreType.Hand);
+        p2RoundScoreText.Text = GM.ScoreText(PlayerTwo, ScoreType.Round);
         
 
         foreach (Player player in GM.Players)
@@ -215,6 +296,7 @@ public class GameScene : Scene
                 for (int j = i + 1; j < player.ActiveDice.Count; j++)
                 {
                     Physics.CircleCollision(player.ActiveDice[i], player.ActiveDice[j]);
+                    
                 }
             }
         }
@@ -234,6 +316,7 @@ public class GameScene : Scene
             element.Draw(_shapeBatch, null, screen);
         _shapeBatch.End();
         
+        
         // Then draw text/images on top
         _spriteBatch.Begin();
         foreach (var element in _ui)
@@ -242,12 +325,61 @@ public class GameScene : Scene
         foreach (Dice die in ObjManager.ObjList.OfType<Dice>()) 
         {
             if (die.Visible)
+            {
                 Core.SpriteManager.Draw(_spriteBatch, die.TextureKey, die, die.Rotation);
+            }
+                
+                
         }
         _spriteBatch.End();
         
         
+        /// === Have to call shapebatch again so that dice outlines are drawn on top of dice ===
+        _shapeBatch.Begin();
+        foreach (Player player in GM.Players)
+        {
+            foreach (Dice die in player.ActiveDice)
+            {
+                DrawDiceOutline(_shapeBatch, die);
+            }
+        }
+
+
+        _shapeBatch.End();
+        
+        
         base.Draw(gameTime);
     }
+    public void DrawDiceOutline(ShapeBatch shapeBatch, Dice die)
+    {
+        if (die.State == DieState.held)
+        {
+            DrawOutline(die, Color.Gold, 2f, 2f, 5f, die.Rotation);
+                    
+        }
+        if (IsMouseOverDice(die) && die.State != DieState.held)
+        {
+            DrawOutline(die, Color.White, 2f, 2f, 5f, die.Rotation);
+
+        }
+
+        void DrawOutline(Dice die, Color colour, float thickness, float offset, float rounded, float rotation)
+        {
+            Vector2 pos = die.Position - new Vector2(offset, offset);
+            Vector2 size = die.Size + new Vector2(offset, offset);
+            shapeBatch.BorderRectangle(pos, size, colour, thickness, rounded, rotation);
+        }
+            
+
+    }
+    private bool IsMouseOverDice(Dice die)
+    {
+        if (die.Box.Contains(Core.Input.Mouse.Position))
+            return true;
+            
+        return false; 
+    }
+
+    
 }
 

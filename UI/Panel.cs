@@ -2,6 +2,9 @@ using Apos.Shapes;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
+using System;
+using DiceMG.Input;
 
 namespace DiceMG.UI;
 
@@ -13,6 +16,22 @@ public class Panel : UIElement
     public float CornerRadius { get; set; } = 5f;
     public bool HasBorder { get; set; } = true;
     public bool HasFill { get; set; } = true;
+    
+    //Click Events
+    public Action OnClick { get; set; }
+    public bool _wasLeftClicked;
+    public bool _isHovering;
+    
+    public void Update(Rectangle screenBounds)
+    {
+
+        var bounds = GetBounds(screenBounds);
+        
+        _isHovering = bounds.Contains(Core.Input.Mouse.Position);
+        _wasLeftClicked = Core.Input.Mouse.ButtonPressed(MouseButton.Left);
+        
+        if(_isHovering && _wasLeftClicked) OnClick?.Invoke();
+    }
 
     public override void Draw(ShapeBatch sb, SpriteBatch spriteBatch, Rectangle screenBounds)
     {
@@ -45,4 +64,6 @@ public class Panel : UIElement
         
         base.Draw(sb, spriteBatch, screenBounds);
     }
+
+
 }

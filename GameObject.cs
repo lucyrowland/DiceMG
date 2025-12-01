@@ -348,7 +348,6 @@ public class ObjectManager
         }
 
         RollDice();
-        ScoringSystem.Reset(); 
     }
     
     public void RollDice()

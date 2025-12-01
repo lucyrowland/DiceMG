@@ -20,7 +20,7 @@ public class Button : Panel
     //Hover Effect
     public Color HoverFillColour { get; set; } = new Color(60, 60, 60);
     public Color HoverBorderColour { get; set; } = Color.White;
-    private bool _isHovering;
+
     
     //Sizing
     private static float _paddingFactor = 8f;
@@ -28,9 +28,7 @@ public class Button : Panel
     //public bool AutoSize { get; set; } = true;
     public Vector2 ButtonSize => Font.MeasureString(Text) * TextScale + Padding*2; 
     
-    //Click Events
-    public Action OnClick { get; set; }
-    private bool _wasLeftClicked;
+
 
     public void AutoSize()
     {
@@ -60,16 +58,6 @@ public class Button : Panel
         }
     }
 
-    public void Update(Rectangle screenBounds)
-    {
-
-        var bounds = GetBounds(screenBounds);
-        
-        _isHovering = bounds.Contains(Core.Input.Mouse.Position);
-        _wasLeftClicked = Core.Input.Mouse.ButtonPressed(MouseButton.Left);
-        
-        if(_isHovering && _wasLeftClicked) OnClick?.Invoke();
-    }
 
     public override void Draw(ShapeBatch sb, SpriteBatch spriteBatch, Rectangle screenBounds)
     {

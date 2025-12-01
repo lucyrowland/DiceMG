@@ -17,7 +17,7 @@ namespace DiceMG
     {
         private Texture2D pixelTexture;
         private RollingTray _rollingTray;
-        private ScoringSystem ScoringSystem;
+        private Score Score;
         public SpriteFont _windowsXPFont; 
         public SpriteFont _font;
         public SpriteFont _font5x;
@@ -38,7 +38,8 @@ namespace DiceMG
             Global.ScreenHeight = GraphicsDevice.Viewport.Height;
             Global.ScreenWidth = GraphicsDevice.Viewport.Width;
             
-            ChangeScene(new TitleScene());
+            //ChangeScene(new TitleScene());
+            ChangeScene(new GameScene()); //comment out when game is finished or done developing the game scene file 
         }
 
         protected override void LoadContent()
@@ -100,7 +101,7 @@ namespace DiceMG
             CheckForLockButtonClick();
             
             _heldDice = GameObjManager.ObjList.OfType<Dice>().Where(d => d.State == DieState.held).Select(d => d.Value).ToList();
-            _tempScore = ScoringSystem.ShowScore(_heldDice);
+            _tempScore = Score.ShowScore(_heldDice);
             
             if (Input.Keyboard.KeyPressed(Keys.N))
                 GameObjManager.ResetRound(number_of_dice);  
@@ -150,7 +151,7 @@ namespace DiceMG
                         die.State = DieState.free;
                 }
                 Debug.WriteLine($"Die Value: {die.Value}, Die State: {die.State}");
-                Debug.WriteLine($"Score: {ScoringSystem.ShowScore(_heldDice)}");
+                Debug.WriteLine($"Score: {Score.ShowScore(_heldDice)}");
             }
         }
 
@@ -217,7 +218,7 @@ namespace DiceMG
             SpriteBatch.DrawString(_windowsXPFont, "Press Space to Roll", new Vector2(10, 10), Color.White);
             SpriteBatch.DrawString(_windowsXPFont, $"Held Dice: {held_dice_display}" , new Vector2(500, 250), Color.White);
             SpriteBatch.DrawString(_windowsXPFont, "Held Score: " + _tempScore, new Vector2(500, 300), Color.White);
-            SpriteBatch.DrawString(_windowsXPFont, "Total Score: " + ScoringSystem.GetTotalScore(), new Vector2(500, 350), Color.White);
+            SpriteBatch.DrawString(_windowsXPFont, "Total Score: " + Score.GetTotalScore(), new Vector2(500, 350), Color.White);
             
             SpriteBatch.End();
             
@@ -262,13 +263,14 @@ namespace DiceMG
 
         private void ClickLockButton()
         {
-            
-            if (ScoringSystem.GetTempScore() > 0)
+            /*
+            if (Score.GetTempScore() > 0)
             {
                 GM.NextRound();
                 GameObjManager.RemoveLockedInDice();
                 GameObjManager.RollDice();
             }
+            */
                 
         }
 
@@ -280,8 +282,9 @@ namespace DiceMG
 
         private void GameOverScreen(SpriteBatch spriteBatch, ShapeBatch sb)
         {
+            /*
             if (!GameObjManager.ObjList.OfType<Dice>().Any(d => d.State == DieState.rolling))
-                if (!ScoringSystem.PossibleScore())
+                if (!Score.PossibleScore())
                 {
                     sb.Begin(); 
                     sb.DrawRectangle(new Vector2(100, 100), new Vector2(1000, 600), Color.Black, Color.White, 4f, 2f);
@@ -295,6 +298,7 @@ namespace DiceMG
 
                     GM.FlopTurn(); 
                 }
+                */
         }
     }
     
