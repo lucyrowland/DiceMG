@@ -10,7 +10,7 @@ namespace DiceMG.UI;
 
 public class Panel : UIElement
 {
-    public Color FillColour { get; set; } = new Color(40, 40, 40);
+    public Color FillColour { get; set; } = Core.Colours.Paint("maroon");
     public Color BorderColour { get; set; } = Color.White;
     public float BorderThickness { get; set; } = 2f;
     public float CornerRadius { get; set; } = 5f;

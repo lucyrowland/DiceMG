@@ -39,6 +39,16 @@ public class GameScene : Scene
     public Label p1RoundScoreText;
     public Label p2HandScoreText;
     public Label p2RoundScoreText;
+
+    private Color white = Core.Colours.Paint("white");
+    private Color maroon = Core.Colours.Paint("maroon");
+    private Color hot_pink = Core.Colours.Paint("hot pink");
+    private Color barbie_pink = Core.Colours.Paint("barbie pink");
+    private Color perfect_pink = Core.Colours.Paint("perfect pink");
+    private Color dusty_pink = Core.Colours.Paint("dusty pink");
+    private Color light_pink = Core.Colours.Paint("light pink");
+
+    private List<Dice> _allActiveDice; 
     
     public override void Initialize()
     {
@@ -49,105 +59,188 @@ public class GameScene : Scene
 
         
     }
+
+    public List<Dice> SceneActiveDice()
+    {
+        List<Dice> result = new List<Dice>();
+        foreach (Player player in GM.Players)
+        {
+            foreach (Dice dice in player.DiceList)
+            {
+                if (dice.State != DieState.played)
+                {
+                    result.Add(dice);
+                }
+            }
+        }
+
+        return result; 
+    } 
     
 
     public override void LoadContent()
     {
+        
         PlayerOne = new Player("Player 1",1);
         PlayerTwo = new Player("Player 2",2);
         GM.Players.Add(PlayerOne);
         GM.Players.Add(PlayerTwo);
         
-        // === CENTER BUTTONS ===
-        var rollButton = new Button
+        // === P1 BUTTONS ===
+        var rollButton1 = new Button
         {
-            Anchor = Anchor.MiddleCentre,
-            Offset = new Vector2(0, 30),
-            Text = "Roll Dice",
+            Anchor = Anchor.BottomLeft,
+            Offset = new Vector2(0, 57),
+            Text = "Roll",
+            TextColour = dusty_pink,
             Font = Core.Content.Load<SpriteFont>("Fonts/digital18"),
             Padding = new Vector2(20, 12),
-            FillColour = new Color(50, 50, 50),
-            BorderColour = Color.Gray,
+            FillColour = maroon,
+            BorderColour = perfect_pink,
             CornerRadius = 6f,
             OnClick = () => PlayerOne.RollDice()
         };
-        rollButton.AutoSize();
+        rollButton1.AutoSize();
 
 
-        var passButton = new Button
+        var passButton1 = new Button
         {
-            Anchor = Anchor.MiddleCentre,
-            Offset = new Vector2(0, -30), // Position above roll button
+            Anchor = Anchor.BottomCentre,
+            Offset = new Vector2(0, 57), 
             Text = "Pass",
+            TextColour = dusty_pink,
             Font = Core.Content.Load<SpriteFont>("Fonts/digital18"),
             Padding = new Vector2(20, 12),
-            FillColour = new Color(50, 50, 50),
-            BorderColour = Color.Gray,
+            FillColour = maroon,
+            BorderColour = perfect_pink,
             CornerRadius = 6f,
             OnClick = () => Console.WriteLine("Round passed")
         };
-        passButton.AutoSize();
-        
+        passButton1.AutoSize();
 
-        var lockButton = new Button
+        var lockButton1 = new Button
         {
-            Anchor = Anchor.MiddleCentre,
-            Offset = new Vector2(0, 90),
-            Text = "Lock Hand",
+            Anchor = Anchor.BottomRight,
+            Offset = new Vector2(0, 57),
+            Text = "Lock",
+            TextColour = dusty_pink,
+            Font = Core.Content.Load<SpriteFont>("Fonts/digital18"),
+            Padding = new Vector2(44, 12),
+            FillColour = maroon,
+            BorderColour = perfect_pink,
+            CornerRadius = 6f,
+            OnClick = () =>
+            {
+                GM.AddRoundScore(PlayerOne);
+                PlayerOne.RemoveHeldDice();
+            }, 
+        };
+        lockButton1.AutoSize();
+        
+        
+        
+        passButton1.MatchWidth(lockButton1);
+        rollButton1.MatchWidth(lockButton1);
+        
+        // === P2 BUTTONS ===
+        var rollButton2 = new Button
+        {
+            Anchor = Anchor.BottomLeft,
+            Offset = new Vector2(0, 57),
+            Text = "Roll",
+            TextColour = dusty_pink,
             Font = Core.Content.Load<SpriteFont>("Fonts/digital18"),
             Padding = new Vector2(20, 12),
-            FillColour = new Color(50, 50, 50),
-            BorderColour = Color.Gray,
+            FillColour = maroon,
+            BorderColour = perfect_pink,
             CornerRadius = 6f,
-            OnClick = () => GM.AddRoundScore(PlayerOne)
+            OnClick = () => PlayerTwo.RollDice()
         };
-        lockButton.AutoSize();
-        
-        passButton.MatchWidth(lockButton);
-        rollButton.MatchWidth(lockButton);
-        
-        _buttons.Add(lockButton);
-        _ui.Add(lockButton);
-        _buttons.Add(rollButton);
-        _ui.Add(rollButton);
-        _buttons.Add(passButton);
-        _ui.Add(passButton);
+        rollButton2.AutoSize();
 
-        Button.SpaceApart(_buttons, new Vector2 (0, 4));
+
+        var passButton2 = new Button
+        {
+            Anchor = Anchor.BottomCentre,
+            Offset = new Vector2(0, 57), 
+            Text = "Pass",
+            TextColour = dusty_pink,
+            Font = Core.Content.Load<SpriteFont>("Fonts/digital18"),
+            Padding = new Vector2(20, 12),
+            FillColour = maroon,
+            BorderColour = perfect_pink,
+            CornerRadius = 6f,
+            OnClick = () => Console.WriteLine("Round passed")
+        };
+        passButton2.AutoSize();
+        
+
+        var lockButton2 = new Button
+        {
+            Anchor = Anchor.BottomRight,
+            Offset = new Vector2(0, 57),
+            Text = "Lock",
+            TextColour = dusty_pink,
+            Font = Core.Content.Load<SpriteFont>("Fonts/digital18"),
+            Padding = new Vector2(44, 12),
+            FillColour = maroon,
+            BorderColour = perfect_pink,
+            CornerRadius = 6f,
+            OnClick = () => GM.AddRoundScore(PlayerTwo)
+        };
+        lockButton2.AutoSize();
+        
+        passButton2.MatchWidth(lockButton2);
+        rollButton2.MatchWidth(lockButton2);
+
         
         // === ROLLING TRAYS 
         p1tray = new Panel
         {
             Anchor = Anchor.MiddleCentre,
-            Size = new Vector2(300, 340),
-            Offset = new Vector2(-240, 20),
-            FillColour = new Color(100, 100, 100),
-            BorderColour = Color.Gray,
-            BorderThickness = 2f,
+            Size = new Vector2(410, 410),
+            Offset = new Vector2(-220, 20),
+            FillColour = maroon,
+            BorderColour = perfect_pink,
+            BorderThickness = 4f,
             CornerRadius = 10f,
             OnClick = () => PlayerOne.StopDice()
         };
+        p1tray.AddChild(rollButton1);
+        p1tray.AddChild(passButton1);
+        p1tray.AddChild(lockButton1);
+
+        _buttons.Add(rollButton1);
+        _buttons.Add(passButton1);
+        _buttons.Add(lockButton1);
 
         p2tray = new Panel
         {
             Anchor = Anchor.MiddleCentre,
-            Size = new Vector2(300, 340),
-            Offset = new Vector2(240, 20),
-            FillColour = new Color(100, 100, 100),
-            BorderColour = Color.Gray,
+            Size = new Vector2(410, 410),
+            Offset = new Vector2(220, 20),
+            FillColour = maroon,
+            BorderColour = perfect_pink,
             BorderThickness = 2f,
             OnClick = () => PlayerTwo.StopDice()
         };
+        p2tray.AddChild(rollButton2);
+        p2tray.AddChild(passButton2);
+        p2tray.AddChild(lockButton2);
+
+        _buttons.Add(rollButton2);
+        _buttons.Add(passButton2);
+        _buttons.Add(lockButton2);
         
         // === ROUND SCORE AND SCORED HAND BUTTONS ===
         var p1HandScoreBubble = new Panel
         {
             Anchor = Anchor.TopLeft,
-            Size = new Vector2(144, 50),
+            Size = new Vector2(204, 55),
             Offset = new Vector2(0, -60),
-            FillColour = Color.Red,
-            BorderColour = Color.White,
-            BorderThickness = 2f,
+            FillColour = perfect_pink,
+            BorderColour = maroon,
+            BorderThickness = 4f,
             CornerRadius = 10f,
         };
         p1tray.AddChild(p1HandScoreBubble);
@@ -162,15 +255,15 @@ public class GameScene : Scene
         p1HandScoreBubble.AddChild(p1HandScoreText);
         var p1RoundScoreBubble = new Panel
         {
-            Anchor = Anchor.TopLeft,
-            Size = new Vector2(144, 50),
-            Offset = new Vector2(150,0),
-            FillColour = Color.Blue,
-            BorderColour = Color.White,
-            BorderThickness = 2f,
+            Anchor = Anchor.TopRight,
+            Size = new Vector2(204, 55),
+            Offset = new Vector2(0,-60),
+            FillColour = barbie_pink,
+            BorderColour = maroon,
+            BorderThickness = 4f,
             CornerRadius = 10f,
         };
-        p1HandScoreBubble.AddChild(p1RoundScoreBubble);
+        p1tray.AddChild(p1RoundScoreBubble);
         p1RoundScoreText = new Label
         {
             Anchor = Anchor.MiddleCentre,
@@ -186,11 +279,11 @@ public class GameScene : Scene
         var p2HandScoreBubble = new Panel
         {
             Anchor = Anchor.TopLeft,
-            Size = new Vector2(144, 50),
+            Size = new Vector2(204, 55),
             Offset = new Vector2(0, -60),
-            FillColour = Color.Red,
-            BorderColour = Color.White,
-            BorderThickness = 2f,
+            FillColour = perfect_pink,
+            BorderColour = maroon,
+            BorderThickness = 4f,
             CornerRadius = 10f,
         };
         p2tray.AddChild(p2HandScoreBubble);
@@ -205,15 +298,15 @@ public class GameScene : Scene
         p2HandScoreBubble.AddChild(p2HandScoreText);
         var p2RoundScoreBubble = new Panel
         {
-            Anchor = Anchor.TopLeft,
-            Size = new Vector2(144, 50),
-            Offset = new Vector2(150,0),
-            FillColour = Color.Blue,
-            BorderColour = Color.White,
-            BorderThickness = 2f,
+            Anchor = Anchor.TopRight,
+            Size = new Vector2(204, 55),
+            Offset = new Vector2(0,-60),
+            FillColour = barbie_pink,
+            BorderColour = maroon,
+            BorderThickness = 4f,
             CornerRadius = 10f,
         };
-        p2HandScoreBubble.AddChild(p2RoundScoreBubble);
+        p2tray.AddChild(p2RoundScoreBubble);
         p2RoundScoreText = new Label
         {
             Anchor = Anchor.MiddleCentre,
@@ -273,6 +366,8 @@ public class GameScene : Scene
     public override void Update(GameTime gameTime)
     {
         var screen = Core.GraphicsDevice.Viewport.Bounds;
+
+        _allActiveDice = SceneActiveDice();
         
         foreach (var btn in _buttons)
             btn.Update(screen);
@@ -306,7 +401,7 @@ public class GameScene : Scene
     }
     public override void Draw(GameTime gameTime)
     {
-        Core.GraphicsDevice.Clear(new Color(20, 20, 25));
+        Core.GraphicsDevice.Clear(Core.Colours.Paint("light pink"));
         
         var screen = Core.GraphicsDevice.Viewport.Bounds;
         
@@ -322,27 +417,27 @@ public class GameScene : Scene
         foreach (var element in _ui)
             element.Draw(null, _spriteBatch, screen);
         //then draw dice
-        foreach (Dice die in ObjManager.ObjList.OfType<Dice>()) 
+
+        foreach (Dice die in _allActiveDice)
         {
             if (die.Visible)
             {
                 Core.SpriteManager.Draw(_spriteBatch, die.TextureKey, die, die.Rotation);
             }
-                
-                
         }
+        
+        
         _spriteBatch.End();
         
         
         /// === Have to call shapebatch again so that dice outlines are drawn on top of dice ===
         _shapeBatch.Begin();
-        foreach (Player player in GM.Players)
+
+        foreach (Dice die in _allActiveDice )
         {
-            foreach (Dice die in player.ActiveDice)
-            {
-                DrawDiceOutline(_shapeBatch, die);
-            }
+            DrawDiceOutline(_shapeBatch, die);
         }
+        
 
 
         _shapeBatch.End();

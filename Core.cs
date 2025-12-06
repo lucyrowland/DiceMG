@@ -25,6 +25,9 @@ public class Core : Game
     public static GraphicsDeviceManager Graphics { get; private set; }
     public static GraphicsDevice GraphicsDevice { get; private set; }
     
+    //Load in custom color palette
+    public static ColourDirectory Colours { get; private set; }
+    
     //this will be the spritebatch for all 2d rendering
     public static SpriteBatch SpriteBatch { get; private set; }
     public static SpriteManager SpriteManager { get; private set; }
@@ -81,6 +84,7 @@ public class Core : Game
         ShapeBatch = new ShapeBatch(GraphicsDevice, Content);
         GameObjManager = new ObjectManager();
         GM = new GameManager();
+        Colours = new ColourDirectory();
 
         
         //create instances for spritebatch and input manager

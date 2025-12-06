@@ -14,11 +14,11 @@ public class Button : Panel
     //Text
     public string Text { get; set; } = "Button";
     public SpriteFont Font { get; set; }
-    public Color TextColour { get; set; } = Color.White;
+    public Color TextColour { get; set; }
     public float TextScale { get; set; } = 1f;
     
     //Hover Effect
-    public Color HoverFillColour { get; set; } = new Color(60, 60, 60);
+    public Color HoverFillColour { get; set; } = Core.Colours.Paint("maroon"); 
     public Color HoverBorderColour { get; set; } = Color.White;
 
     
@@ -62,6 +62,8 @@ public class Button : Panel
     public override void Draw(ShapeBatch sb, SpriteBatch spriteBatch, Rectangle screenBounds)
     {
         if (!IsVisible) return;
+
+        if (HoverFillColour != Color.Transparent) HoverFillColour = FillColour;
     
         var bounds = GetBounds(screenBounds);
         var fill = _isHovering ? HoverFillColour : FillColour;

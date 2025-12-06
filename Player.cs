@@ -81,6 +81,19 @@ public class Player
         }
     }
 
+    public void DeleteDice(Dice d)
+    {
+        DiceList.Remove(d);
+    }
+
+    public void RemoveHeldDice()
+    {
+        foreach (Dice d in DiceList)
+        {
+            if (d.State == DieState.held) d.State = DieState.played;
+        }
+    }
+
     public void Update(GameTime dt)
     {
 
