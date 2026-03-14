@@ -18,8 +18,13 @@ public class Button : Panel
     public float TextScale { get; set; } = 1f;
     
     //Hover Effect
-    public Color HoverFillColour { get; set; } = Core.Colours.Paint("maroon"); 
+    public Color HoverFillColour { get; set; } = Core.Colours.Paint("maroon");
     public Color HoverBorderColour { get; set; } = Color.White;
+
+    //Disabled State
+    public Color DisabledFillColour   { get; set; } = Color.DimGray;
+    public Color DisabledBorderColour { get; set; } = Color.Gray;
+    public Color DisabledTextColour   { get; set; } = Color.Gray;
 
     
     //Sizing
@@ -63,11 +68,10 @@ public class Button : Panel
     {
         if (!IsVisible) return;
 
-        if (HoverFillColour != Color.Transparent) HoverFillColour = FillColour;
-    
         var bounds = GetBounds(screenBounds);
-        var fill = _isHovering ? HoverFillColour : FillColour;
-        var border = _isHovering ? HoverBorderColour : BorderColour;
+        var fill   = !IsEnabled ? DisabledFillColour   : (_isHovering ? HoverFillColour   : FillColour);
+        var border = !IsEnabled ? DisabledBorderColour : (_isHovering ? HoverBorderColour : BorderColour);
+        var tColour= !IsEnabled ? DisabledTextColour   : TextColour;
     
         // Only draw the shape if we have a ShapeBatch
         if (sb != null && (HasFill || HasBorder))
@@ -90,7 +94,7 @@ public class Button : Panel
             var textSize = Font.MeasureString(Text) * TextScale;  
             var textPos = new Vector2(bounds.Center.X - textSize.X / 2, bounds.Center.Y - textSize.Y / 2);
             
-            spriteBatch.DrawString(Font, Text, textPos, TextColour, Font.Spacing, Vector2.Zero, TextScale, SpriteEffects.None, 0f);
+            spriteBatch.DrawString(Font, Text, textPos, tColour, Font.Spacing, Vector2.Zero, TextScale, SpriteEffects.None, 0f);
         }
         
         // Draw children if fany

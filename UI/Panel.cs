@@ -21,15 +21,17 @@ public class Panel : UIElement
     public Action OnClick { get; set; }
     public bool _wasLeftClicked;
     public bool _isHovering;
-    
+    public bool IsEnabled { get; set; } = true;
+
     public void Update(Rectangle screenBounds)
     {
+        if (!IsEnabled) { _isHovering = false; return; }
 
         var bounds = GetBounds(screenBounds);
-        
+
         _isHovering = bounds.Contains(Core.Input.Mouse.Position);
         _wasLeftClicked = Core.Input.Mouse.ButtonPressed(MouseButton.Left);
-        
+
         if(_isHovering && _wasLeftClicked) OnClick?.Invoke();
     }
 

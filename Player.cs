@@ -13,6 +13,7 @@ public class Player
 {
     public string Name;
     public Panel Tray;
+    public Panel PlayerPanel;
     public Dictionary<Dice, string> DiceSet;
     public List<Dice> DiceList;
     public List<Dice> ActiveDice => DiceList.Where(d => d.State != DieState.played).ToList();
@@ -42,6 +43,9 @@ public class Player
     public string HandScoreText => HandScore.ToString();
     public int RoundScore => Scores.GetRoundScore(); 
     public string RoundScoreText => RoundScore.ToString();
+    
+    public int TotalScore => Scores.GetTotalScore();
+    public string TotalScoreText => TotalScore.ToString();
     public Player(string name, int p_num)
     {
         Name = name;
@@ -92,6 +96,53 @@ public class Player
         {
             if (d.State == DieState.held) d.State = DieState.played;
         }
+    }
+
+    public void ResetDiceList(int numberofDice, ObjectManager ObjManager)
+    {
+        var playerString = "P" + PNumber;
+        for (int i = 0; i < DiceList.Count; i++)
+        {
+            ObjManager.DictRemove(playerString + "D" + i);
+            ObjManager.KillObject(DiceList[i]);
+        }
+        DiceList.Clear();
+        CreateDiceList(numberofDice, ObjManager);
+    }
+
+    public void CreateDiceList(int numberofDice, ObjectManager ObjManager)
+    {
+        // === SPAWN DICE IN TRAY ===
+
+        
+        // Dice dimensions (adjust these to match your dice sprite size)
+        float dw = 55; // dice width
+        float dh = 55; // dice height
+        
+        // Calculate spawn bounds with padding
+    
+        
+        // Spawn dice at random positions within bounds
+        Random random = new Random();
+        var playerString = "P" + PNumber;
+        var trayBounds = Tray.GetBounds(Core.GraphicsDevice.Viewport.Bounds);
+        
+        int spawnXLower = trayBounds.Left + (int)Global.TRAY_PADDING;
+        int spawnXUpper = trayBounds.Right - (int)dw - (int)Global.TRAY_PADDING;
+        int spawnYLower = trayBounds.Top + (int)Global.TRAY_PADDING;
+        int diceYUpper = trayBounds.Bottom - (int)dh - (int)Global.TRAY_PADDING;
+       
+        for (int i = 0; i<numberofDice ; i++) // spawn n dice, add to player's dice set and object manager
+        {
+            int x = random.Next(spawnXLower, spawnXUpper);
+            int y = random.Next(spawnYLower, diceYUpper);
+        
+            Dice die = new Dice(dw, dh, new Vector2(x, y));
+            ObjManager.BirthObject(die, playerString + "D" + i);
+            AddDice(die, "D" + i);
+        }
+        
+
     }
 
     public void Update(GameTime dt)

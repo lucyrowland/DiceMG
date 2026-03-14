@@ -63,7 +63,7 @@ public class TitleScene : Scene
 
     public override void Update(GameTime gameTime)
     {
-        if (Core.Input.Keyboard.KeyPressed(Keys.Enter)) Core.ChangeScene(new GameScene());
+        if (Core.Input.Keyboard.KeyPressed(Keys.Enter)) SceneManager.ChangeScene(new GameScene());
     }
 
     public override void Draw(GameTime gameTime)

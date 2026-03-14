@@ -63,7 +63,7 @@ public class Score
 
     public void AddToTotalScore()
     {
-        RoundScore += TotalScore;
+        TotalScore += RoundScore;
         ResetRound();
     }
     public int GetRoundScore() => RoundScore;
